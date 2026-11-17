@@ -1,13 +1,19 @@
 {
   "domain": "eloverblik_data",
   "name": "El-Overblik HA",
-  "categories": ["energy.meters_monitoring"],
-  "codeowners": ["@fclante"],
+  "categories": [
+    "energy.meters_monitoring"
+  ],
+  "codeowners": [
+    "@fclante"
+  ],
   "config_flow": true,
-  "dependencies": ["recorder"],
+  "dependencies": [
+    "recorder"
+  ],
   "documentation": "https://github.com/fclante/el-overblik-ha-app",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/fclante/el-overblik-ha-app/issues",
   "requirements": [],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
