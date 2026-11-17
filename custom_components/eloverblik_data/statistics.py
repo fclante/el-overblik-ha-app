@@ -1,5 +1,6 @@
 """Durable canonical quantities and correction-aware recorder imports."""
 
+from asyncio import Future
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -11,6 +12,7 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
 )
 from homeassistant.components.recorder.statistics import async_add_external_statistics
+from homeassistant.components.recorder.tasks import SynchronizeTask
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
@@ -128,6 +130,9 @@ class MeterHistory:
                 async_add_external_statistics(
                     self.hass, metadata, points[offset : offset + 1000]
                 )
-        await recorder.async_block_till_done()
+        # Core's idle shortcut can miss a statistics task already taken off the queue.
+        committed: Future[None] = self.hass.loop.create_future()
+        recorder.queue_task(SynchronizeTask(committed))
+        await committed
         self.dirty = False
         await self.save()

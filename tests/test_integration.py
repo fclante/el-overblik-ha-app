@@ -1,13 +1,16 @@
 """Exercise real Core entities, recorder, storage, actions and translations."""
 
+import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from threading import Event
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder import statistics as recorder_statistics
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -82,6 +85,44 @@ async def test_recorder_corrections_restart_and_missing(hass):
     )
     result = await records(hass, statistic_id)
     assert [r["sum"] for r in result[statistic_id]] == [0.75, 3.75]
+
+
+async def test_import_waits_for_inflight_recorder_task_before_marking_clean(hass):
+    assert await async_setup_component(hass, "recorder", {})
+    await hass.async_start()
+    history = MeterHistory(hass, METER)
+    entered = asyncio.Event()
+    release = Event()
+    import_statistics = recorder_statistics.import_statistics
+
+    def delayed_import(*args):
+        hass.loop.call_soon_threadsafe(entered.set)
+        if not release.wait(timeout=10):
+            raise RuntimeError("Test did not release the recorder import")
+        return import_statistics(*args)
+
+    recorder = get_instance(hass)
+    at = datetime(2026, 1, 1, tzinfo=UTC)
+    with (
+        patch.object(history, "save", new=AsyncMock()),
+        patch.object(recorder, "async_get_commit_future", return_value=None),
+        patch.object(
+            recorder_statistics, "import_statistics", side_effect=delayed_import
+        ),
+    ):
+        task = hass.async_create_task(
+            history.merge({"consumption": {at: Reading(at, Decimal("0.5"), "A03")}})
+        )
+        try:
+            await asyncio.wait_for(entered.wait(), timeout=10)
+            assert not task.done()
+            assert history.dirty
+        finally:
+            release.set()
+            await task
+    result = await records(hass, f"{DOMAIN}:{METER}_consumption")
+    assert result[f"{DOMAIN}:{METER}_consumption"][0]["sum"] == 0.5
+    assert not history.dirty
 
 
 async def test_full_entry_entities_actions_and_redacted_diagnostics(hass):
