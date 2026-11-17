@@ -1,0 +1,27 @@
+name: Check release snapshot
+description: Run the same locked local checks before review and publication
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      with:
+        version: "0.12.21"
+        python-version: "3.14.7"
+    - shell: bash
+      run: uv sync --locked
+    - shell: bash
+      run: uv run pytest -q
+    - shell: bash
+      run: uv run ruff check custom_components tests scripts
+    - shell: bash
+      run: uv run ruff format --check custom_components tests scripts
+    - shell: bash
+      run: uv run mypy custom_components scripts
+    - shell: bash
+      run: uv run python scripts/release.py check
+    - name: hassfest (official image, pinned digest)
+      shell: bash
+      run: >-
+        docker run --rm
+        --volume "$GITHUB_WORKSPACE/custom_components:/github/workspace/custom_components:ro"
+        ghcr.io/home-assistant/hassfest@sha256:b200bb178c5c62f984c2c705c820bd991e5308d6cba6987d24c7d643919ab5cc

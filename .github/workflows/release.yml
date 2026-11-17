@@ -1,0 +1,38 @@
+name: Release
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: main-releases
+  queue: max
+jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
+  release:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - name: Prepare versioned snapshot (no publication)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python3 scripts/release.py prepare
+          --state "$RUNNER_TEMP/release-state.json"
+      - uses: ./.github/actions/check
+      - name: Publish verified snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          uv run python scripts/release.py publish
+          --state "$RUNNER_TEMP/release-state.json"
+          --output "$RUNNER_TEMP/release-dist"
