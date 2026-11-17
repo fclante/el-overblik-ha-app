@@ -1,6 +1,7 @@
 {
   "domain": "eloverblik_data",
   "name": "ElOverblik Data",
+  "categories": ["energy.meters_monitoring"],
   "codeowners": ["@fclante"],
   "config_flow": true,
   "dependencies": ["recorder"],
