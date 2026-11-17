@@ -1,0 +1,101 @@
+{
+  "title": "ElOverblik Data",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Forbind ElOverblik",
+        "description": "Indtast et opdateringstoken til Customer API og målepunkter, der allerede er tilknyttet på eloverblik.dk. Målingerne er forsinkede og ikke live.",
+        "data": {"refresh_token": "Opdateringstoken", "metering_points": "Målepunkts-ID'er (kommaseparerede)"}
+      },
+      "reconfigure": {
+        "title": "Skift målepunkter",
+        "description": "Indtast token og hele listen over målepunkter, der skal beholdes. Historiske statistikker bevares for fjernede målepunkter.",
+        "data": {"refresh_token": "Opdateringstoken", "metering_points": "Målepunkts-ID'er (kommaseparerede)"}
+      },
+      "reauth_confirm": {
+        "title": "Udskift ElOverblik-token",
+        "description": "Opret eller aktivér et opdateringstoken til Customer API i ElOverblik, og indtast det her.",
+        "data": {"refresh_token": "Opdateringstoken", "metering_points": "Målepunkts-ID'er (kommaseparerede)"}
+      }
+    },
+    "error": {
+      "invalid_auth": "ElOverblik afviste tokenet. Kontrollér, at det er et aktivt token til Customer API.",
+      "cannot_connect": "Kunne ikke hente data fra ElOverblik. Prøv igen senere.",
+      "invalid_meters": "Indtast et eller flere målepunkts-ID'er på 18 cifre, adskilt af kommaer.",
+      "overlapping_meters": "Et eller flere målepunkter er allerede konfigureret i en anden ElOverblik Data-integration.",
+      "missing_relation": "Et eller flere målepunkter kan ikke tilgås. Kontrollér ID'erne, og tilknyt målepunkterne i ElOverblik, før du fortsætter."
+    },
+    "abort": {
+      "reauth_successful": "Godkendelsen er opdateret.",
+      "reconfigure_successful": "Målepunkterne er opdateret."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Historik og opdateringer",
+        "description": "Importér som standard 12 måneder, eller vælg al tilgængelig historik. Sproget følger din Home Assistant-profil (dansk eller engelsk).",
+        "data": {"all_history": "Importér al tilgængelig historik", "history_start": "Startdato for historik", "poll_hours": "Opdateringsinterval (timer)"},
+        "data_description": {"all_history": "De foregående fem år samt indeværende år, afhængigt af adgang.", "history_start": "Ignoreres, når al tilgængelig historik er valgt.", "poll_hours": "Mellem 1 og 24 timer. Målinger kan være flere dage forsinkede."}
+      }
+    },
+    "error": {"invalid_date": "Vælg en dato inden for de foregående fem år samt indeværende år og senest i dag."}
+  },
+  "entity": {
+    "sensor": {
+      "consumption_latest": {"name": "Senest rapporterede forbrug"},
+      "consumption_day": {"name": "Forbrug på seneste komplette dag"},
+      "consumption_month": {"name": "Rapporteret forbrug denne måned"},
+      "consumption_year": {"name": "Rapporteret forbrug i år"},
+      "production_latest": {"name": "Senest rapporterede produktion"},
+      "production_day": {"name": "Produktion på seneste komplette dag"},
+      "production_month": {"name": "Rapporteret produktion denne måned"},
+      "production_year": {"name": "Rapporteret produktion i år"},
+      "last_success": {"name": "Seneste vellykkede hentning"},
+      "latest_measurement": {"name": "Seneste måling"},
+      "status": {"name": "Datastatus", "state": {"ready": "Klar", "limited": "Begrænsede data", "connection_error": "Forbindelsesfejl", "no_data": "Ingen data", "access_error": "Målepunktsadgang mistet", "api_error": "API-fejl", "missing_response": "Manglende svar"}},
+      "import_status": {"name": "Historisk import", "state": {"idle": "Inaktiv", "running": "Kører", "complete": "Fuldført", "error": "Mislykket", "cancelled": "Annulleret"}},
+      "estimated_annual_volume": {"name": "Anslået årligt forbrug"},
+      "power_limit_kw": {"name": "Effektgrænse"},
+      "power_limit_a": {"name": "Strømgrænse"},
+      "capacity": {"name": "Rapporteret kapacitet"},
+      "reported_tariff": {"name": "{charge} rapporteret tarif", "state": {"source_reported": "Se rapporteret tarifplan"}},
+      "reported_fixed_charge": {"name": "{charge} rapporteret afgift"}
+    },
+    "binary_sensor": {"stale": {"name": "Data forældede eller utilgængelige"}},
+    "button": {"refresh": {"name": "Opdatér data"}}
+  },
+  "issues": {
+    "meter_access": {
+      "title": "ElOverblik-adgang mistet for målepunkt, der slutter på {meter}",
+      "description": "Kontrollér tilknytningen og adgangsperioden i ElOverblik. Integrationen er skrivebeskyttet og kan ikke tilknytte målepunkter. Andre målepunkter opdateres fortsat."
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {"message": "ElOverblik afviste godkendelsen. Udskift tokenet via Home Assistants funktion til fornyet godkendelse."},
+    "dated_charges_unavailable": {"message": "ElOverbliks aktive tjeneste udstiller ikke det dokumenterede endepunkt for daterede afgifter. Aktuelle rapporterede afgifter kan stadig hentes via Hent rapporterede afgifter. Historiske afgiftsberegninger er ikke tilgængelige."},
+    "entry_unavailable": {"message": "Den valgte ElOverblik Data-integration er ikke indlæst."},
+    "unknown_meter": {"message": "Vælg kun målepunkter, der er konfigureret i denne integration."},
+    "history_busy": {"message": "En historisk import kører allerede. Se importens statussensor."},
+    "refresh_busy": {"message": "Vent et minut, før du opdaterer igen."},
+    "invalid_period": {"message": "Vælg en gyldig periode inden for API'ets historikgrænse med slutdato senest i morgen. Slutdatoen er eksklusiv."},
+    "charge_query_failed": {"message": "Kunne ikke hente afgifter. Brug tidsstempler med tidszone, højst 31 dage og højst 10 konfigurerede målepunkter."}
+  },
+  "services": {
+    "import_history": {
+      "name": "Importér eller genindlæs historisk energi",
+      "description": "Start en baggrundsimport for alle målepunkter i integrationen. Returnerer et job-ID; fremdrift vises af sensoren for historisk import.",
+      "fields": {"entry_id": {"name": "Integration"}, "start": {"name": "Startdato"}, "end": {"name": "Eksklusiv slutdato"}}
+    },
+    "get_charges": {
+      "name": "Hent rapporterede afgifter",
+      "description": "Returnér gemte tariffer, abonnementer og gebyrer fra kilden. Ikke en fuld elregning eller en beregnet aktuel pris.",
+      "fields": {"entry_id": {"name": "Integration"}, "metering_points": {"name": "Målepunkts-ID'er"}}
+    },
+    "get_charge_schedule": {
+      "name": "Hent daterede afgiftsoplysninger",
+      "description": "Hent tilknytninger og daterede kildepriser for højst 10 målepunkter og 31 dage. Kræver tidsstempler med UTC-forskydning. Beregner ikke omkostninger.",
+      "fields": {"entry_id": {"name": "Integration"}, "metering_points": {"name": "Målepunkts-ID'er"}, "start": {"name": "Starttidspunkt"}, "end": {"name": "Eksklusivt sluttidspunkt"}}
+    }
+  }
+}

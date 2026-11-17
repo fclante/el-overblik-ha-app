@@ -1,0 +1,8 @@
+{
+  "name": "ElOverblik Data",
+  "homeassistant": "2026.11.2",
+  "country": "DK",
+  "zip_release": true,
+  "filename": "eloverblik_data.zip",
+  "hide_default_branch": true
+}

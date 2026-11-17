@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>ElOverblik Data community integration</title>
+  <desc>Original meter chart artwork. Copyright (c) 2026 fclante. MIT License.</desc>
+  <rect width="512" height="512" rx="96" fill="#073b4c"/>
+  <path d="M88 368V256h64v112zm136 0V168h64v200zm136 0V88h64v280z" fill="#06d6a0"/>
+  <path d="M88 400h336" stroke="#fff" stroke-width="24" stroke-linecap="round"/>
+</svg>

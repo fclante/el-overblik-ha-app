@@ -1,0 +1,45 @@
+import_history:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: eloverblik_data
+    start:
+      required: true
+      selector:
+        date:
+    end:
+      required: true
+      selector:
+        date:
+get_charges:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: eloverblik_data
+    metering_points:
+      selector:
+        object:
+get_charge_schedule:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: eloverblik_data
+    metering_points:
+      selector:
+        object:
+    start:
+      required: true
+      example: "2026-11-01T00:00:00+01:00"
+      selector:
+        text:
+    end:
+      required: true
+      example: "2026-11-02T00:00:00+01:00"
+      selector:
+        text:

@@ -1,0 +1,101 @@
+{
+  "title": "ElOverblik Data",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect ElOverblik",
+        "description": "Enter a Customer API refresh token and already-linked metering points from eloverblik.dk. Readings are delayed, not live.",
+        "data": {"refresh_token": "Refresh token", "metering_points": "Metering-point IDs (comma-separated)"}
+      },
+      "reconfigure": {
+        "title": "Change metering points",
+        "description": "Enter the token and complete list of meters to keep. Removed meters retain historical statistics.",
+        "data": {"refresh_token": "Refresh token", "metering_points": "Metering-point IDs (comma-separated)"}
+      },
+      "reauth_confirm": {
+        "title": "Replace ElOverblik token",
+        "description": "Create or activate a Customer API refresh token in ElOverblik, then enter it here.",
+        "data": {"refresh_token": "Refresh token", "metering_points": "Metering-point IDs (comma-separated)"}
+      }
+    },
+    "error": {
+      "invalid_auth": "ElOverblik rejected the refresh token. Check that it is an active Customer API token.",
+      "cannot_connect": "Could not read ElOverblik data. Try again later.",
+      "invalid_meters": "Enter one or more 18-digit metering-point IDs, separated by commas.",
+      "overlapping_meters": "One or more meters are already configured in another ElOverblik Data entry.",
+      "missing_relation": "One or more meters cannot be accessed. Check the IDs and link the meters in ElOverblik before continuing."
+    },
+    "abort": {
+      "reauth_successful": "Authentication updated.",
+      "reconfigure_successful": "Metering points updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "History and updates",
+        "description": "Import 12 months by default or choose all available history. Language follows your Home Assistant profile (Danish or English).",
+        "data": {"all_history": "Import all available history", "history_start": "History start date", "poll_hours": "Refresh interval (hours)"},
+        "data_description": {"all_history": "Previous five years plus the current year, subject to access.", "history_start": "Ignored when all available history is selected.", "poll_hours": "Between 1 and 24 hours. Readings may arrive several days late."}
+      }
+    },
+    "error": {"invalid_date": "Choose a date within the previous five years plus the current year, and no later than today."}
+  },
+  "entity": {
+    "sensor": {
+      "consumption_latest": {"name": "Latest reported consumption"},
+      "consumption_day": {"name": "Most recent complete day's consumption"},
+      "consumption_month": {"name": "Reported consumption this month"},
+      "consumption_year": {"name": "Reported consumption this year"},
+      "production_latest": {"name": "Latest reported production"},
+      "production_day": {"name": "Most recent complete day's production"},
+      "production_month": {"name": "Reported production this month"},
+      "production_year": {"name": "Reported production this year"},
+      "last_success": {"name": "Last successful fetch"},
+      "latest_measurement": {"name": "Latest measurement"},
+      "status": {"name": "Data status", "state": {"ready": "Ready", "limited": "Limited data", "connection_error": "Connection error", "no_data": "No data", "access_error": "Meter access lost", "api_error": "API error", "missing_response": "Missing response"}},
+      "import_status": {"name": "Historical import", "state": {"idle": "Idle", "running": "Running", "complete": "Complete", "error": "Failed", "cancelled": "Cancelled"}},
+      "estimated_annual_volume": {"name": "Estimated annual consumption"},
+      "power_limit_kw": {"name": "Power limit"},
+      "power_limit_a": {"name": "Current limit"},
+      "capacity": {"name": "Reported capacity"},
+      "reported_tariff": {"name": "{charge} reported tariff", "state": {"source_reported": "See reported schedule"}},
+      "reported_fixed_charge": {"name": "{charge} reported charge"}
+    },
+    "binary_sensor": {"stale": {"name": "Data stale or unavailable"}},
+    "button": {"refresh": {"name": "Refresh data"}}
+  },
+  "issues": {
+    "meter_access": {
+      "title": "ElOverblik access lost for meter ending {meter}",
+      "description": "Check the meter relation and authorized period in ElOverblik. This integration is read-only and cannot link meters. Other meters continue updating."
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {"message": "ElOverblik rejected authentication. Replace the refresh token using Home Assistant's reauthentication flow."},
+    "dated_charges_unavailable": {"message": "ElOverblik's live service does not expose the documented dated-charge endpoint. Current reported charges remain available through Get reported charges. Historical charge calculations are not available."},
+    "entry_unavailable": {"message": "The selected ElOverblik Data entry is not loaded."},
+    "unknown_meter": {"message": "Select only meters configured in this integration entry."},
+    "history_busy": {"message": "A historical import is already running. Check its status sensor."},
+    "refresh_busy": {"message": "Please wait one minute before refreshing again."},
+    "invalid_period": {"message": "Choose a valid period within the API history limit, ending no later than tomorrow. The end date is exclusive."},
+    "charge_query_failed": {"message": "Unable to retrieve charges. Use timezone-aware timestamps, a maximum of 31 days and at most 10 configured meters."}
+  },
+  "services": {
+    "import_history": {
+      "name": "Import or reconcile historical energy",
+      "description": "Start a background import for all meters in an entry. Returns a job ID; progress is shown by the historical import sensor.",
+      "fields": {"entry_id": {"name": "Integration entry"}, "start": {"name": "Start date"}, "end": {"name": "Exclusive end date"}}
+    },
+    "get_charges": {
+      "name": "Get reported charges",
+      "description": "Return cached source-reported tariffs, subscriptions and fees. Not a complete bill or a calculated current rate.",
+      "fields": {"entry_id": {"name": "Integration entry"}, "metering_points": {"name": "Metering-point IDs"}}
+    },
+    "get_charge_schedule": {
+      "name": "Get dated charge information",
+      "description": "Retrieve charge links and dated source prices for up to 10 meters and 31 days. Requires timestamps with UTC offsets. Does not calculate costs.",
+      "fields": {"entry_id": {"name": "Integration entry"}, "metering_points": {"name": "Metering-point IDs"}, "start": {"name": "Start timestamp"}, "end": {"name": "Exclusive end timestamp"}}
+    }
+  }
+}
