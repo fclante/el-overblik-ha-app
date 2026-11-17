@@ -2,7 +2,7 @@
 
 [Read in English](../../CONTRIBUTING.md) · [Projektoversigt](README.md)
 
-Tak, fordi du vil hjælpe med at forbedre ElOverblik Data. Dette er en uafhængig community-integration til Home Assistant, ikke et officielt ElOverblik- eller Home Assistant-projekt. Bidrag til kode, dokumentation, oversættelser og omhyggeligt beskrevne fejlrapporter er velkomne.
+Tak, fordi du vil hjælpe med at forbedre El-Overblik HA. Dette er en uafhængig community-integration til Home Assistant, ikke et officielt ElOverblik- eller Home Assistant-projekt. Bidrag til kode, dokumentation, oversættelser og omhyggeligt beskrevne fejlrapporter er velkomne.
 
 ## Før du opretter et issue eller en pull request
 

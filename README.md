@@ -1,4 +1,4 @@
-# ElOverblik Data for Home Assistant
+# El-Overblik HA
 
 A read-only custom integration for Denmark's [ElOverblik Customer API](https://docs.eloverblik.dk/en/docs/api/customer).
 
@@ -24,15 +24,17 @@ A read-only custom integration for Denmark's [ElOverblik Customer API](https://d
 ### Home Assistant Marketplace
 
 1. In Home Assistant, open **Settings > Marketplace > Add from link**.
-2. Add `https://github.com/fclante/el-overblik-ha-app` and install **ElOverblik Data**.
+2. Add `https://github.com/fclante/el-overblik-ha-app` and install **El-Overblik HA**.
 3. Restart Home Assistant if prompted.
-4. Open **Settings > Devices & services > Add integration > ElOverblik Data**.
+4. Open **Settings > Devices & services > Add integration > El-Overblik HA**.
 
 Marketplace availability through **Add from link** does not mean this project has been accepted into a default catalog.
 
 ### Manual
 
 Copy [`custom_components/eloverblik_data`](custom_components/eloverblik_data) to your Home Assistant configuration directory's `custom_components/eloverblik_data`, restart Home Assistant, and add the integration.
+
+The display name is **El-Overblik HA**. The technical domain, storage keys, statistic IDs and archive filename retain `eloverblik_data` for compatibility with existing installations. Existing default entry titles are updated on setup; custom titles are preserved.
 
 ## Configure
 

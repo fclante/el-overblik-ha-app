@@ -2,7 +2,7 @@
 
 [Read in English](../../SECURITY.md) · [Projektoversigt](README.md)
 
-ElOverblik Data er en uafhængig community-integration. Følg denne politik for at hjælpe med at beskytte brugere og deres kontooplysninger.
+El-Overblik HA er en uafhængig community-integration. Følg denne politik for at hjælpe med at beskytte brugere og deres kontooplysninger.
 
 ## Rapportering af en sårbarhed
 
