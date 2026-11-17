@@ -1,0 +1,37 @@
+name: Feature request / Funktionsønske
+description: Suggest an improvement / Foreslå en forbedring
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Privacy / Privatliv:** Do not include tokens, full metering-point IDs, personal/account data, or raw API responses. Synthetic examples are welcome.
+
+        **Medtag ikke tokens, fulde målepunkts-ID'er, person-/kontodata eller rå API-svar. Syntetiske eksempler er velkomne.**
+  - type: checkboxes
+    attributes:
+      label: Privacy check / Kontrol af private oplysninger
+      options:
+        - label: My request contains no tokens, full meter IDs, personal data, or raw customer responses. / Mit forslag indeholder ingen tokens, fulde måler-ID'er, persondata eller rå kundesvar.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should this solve? / Hvilket problem skal løses?
+      description: Explain your use case without private account or meter details. / Beskriv dit behov uden private konto- eller måleroplysninger.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested solution / Forslag til løsning
+      description: Describe the behavior you would find useful. / Beskriv den adfærd, du ønsker.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered (optional) / Overvejede alternativer (valgfrit)
+    validations:
+      required: false

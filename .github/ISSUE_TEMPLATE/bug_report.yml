@@ -1,0 +1,56 @@
+name: Bug report / Fejlrapport
+description: Report a problem without sharing private data / Beskriv et problem uden at dele private data
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Privacy / Privatliv:** Never enter tokens, full metering-point IDs, personal/account data, or raw API responses. Use synthetic examples and redact logs.
+
+        **Del aldrig tokens, fulde målepunkts-ID'er, person-/kontodata eller rå API-svar. Brug syntetiske eksempler, og redigér logudsnit.**
+  - type: checkboxes
+    attributes:
+      label: Privacy check / Kontrol af private oplysninger
+      options:
+        - label: I have removed tokens, full meter IDs, personal data, and raw customer responses. / Jeg har fjernet tokens, fulde måler-ID'er, persondata og rå kundesvar.
+          required: true
+  - type: input
+    id: version
+    attributes:
+      label: Integration version / Integrationsversion
+      description: "Use the release version only; do not attach configuration files. / Angiv kun versionsnummeret; vedhæft ikke konfigurationsfiler."
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: core
+    attributes:
+      label: Home Assistant Core version / Home Assistant Core-version
+      placeholder: "2026.11.2"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened? / Hvad skete der?
+      description: Describe the issue and the expected behavior. Do not paste raw logs or API responses. / Beskriv fejlen og den forventede adfærd. Indsæt ikke rå logs eller API-svar.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce / Trin til at genskabe
+      description: Use synthetic IDs and example values only. / Brug kun syntetiske ID'er og eksempelværdier.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted diagnostic excerpt (optional) / Redigeret diagnostikudsnit (valgfrit)
+      description: Include only the few relevant, carefully redacted lines. Never attach a full diagnostic dump. / Medtag kun få relevante, grundigt redigerede linjer. Vedhæft aldrig en fuld diagnostikrapport.
+    validations:
+      required: false

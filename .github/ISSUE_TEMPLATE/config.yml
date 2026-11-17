@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerabilities / Sikkerhedssårbarheder
+    url: https://github.com/fclante/el-overblik-ha-app/blob/main/SECURITY.md
+    about: "Read the security policy first. Do not post vulnerability details publicly. / Læs sikkerhedspolitikken først. Offentliggør ikke detaljer om sårbarheder."
