@@ -28,7 +28,7 @@ uv run mypy custom_components scripts
 uv run python scripts/release.py check
 ```
 
-It also runs the official Home Assistant hassfest validator from a digest-pinned image. The image digest is embedded in a composite action's shell `run` command, so maintainers must review and update it manually; Dependabot does not discover image references embedded in shell commands. A separate, independent, read-only job runs the official HACS validator from a digest-pinned image; there is no brand-based exemption. Before the first push, its offline manifest-schema and local brand checks have passed, but full remote HACS checks cannot run and have not been verified. The release job has the required `actions: read` permission. GitHub Actions permissions and remote settings must remain least-privilege.
+It also runs the official Home Assistant hassfest validator from a digest-pinned image. The image digest is embedded in a composite action's shell `run` command, so maintainers must review and update it manually; Dependabot does not discover image references embedded in shell commands. A separate, independent, read-only job runs the official HACS validator from a digest-pinned image; there is no brand-based exemption. Offline manifest-schema and local brand checks do not replace the live HACS checks of the public repository, its metadata and the candidate commit. The release job has the required `actions: read` permission. GitHub Actions permissions and remote settings must remain least-privilege.
 
 The latest installed actionlint is 1.7.12, which does not recognize GitHub's documented `queue: max` key. The exact queue configuration is covered by tests; when actionlint is used, only that unsupported-key diagnostic is excluded. There is no actionlint CI job.
 
@@ -66,7 +66,7 @@ Push a non-`main` validation branch to run the GitHub checks without creating a 
 
 This validates the candidate package, not the release publisher or Marketplace's installation of a published release. The HACS check still needs real repository metadata such as a description, topics and a detectable license. An empty repository's first pushed branch may become its default branch; it does not create `main` or publish a release.
 
-## Repository administrator checklist — not yet performed
+## Repository administrator checklist
 
 Before the first release, an administrator must review and apply the following GitHub repository settings:
 

@@ -28,7 +28,7 @@ uv run mypy custom_components scripts
 uv run python scripts/release.py check
 ```
 
-Derudover køres den officielle Home Assistant hassfest-validator fra et digest-pinnet image. Image-digesten er indlejret i en shell-`run`-kommando i en composite action, så vedligeholdere skal gennemgå og opdatere den manuelt; Dependabot finder ikke image-referencer indlejret i shell-kommandoer. Et separat, uafhængigt skrivebeskyttet job kører den officielle HACS-validator fra et digest-pinnet image; der er ingen undtagelse baseret på brand. Før første push er offlinekontroller af manifestets skema og lokal brand-validering bestået, men fulde eksterne HACS-kontroller kan ikke køres og er ikke verificeret. Udgivelsesjobbet har den nødvendige `actions: read`-tilladelse. GitHub Actions-tilladelser og fjernindstillinger skal fortsat følge princippet om mindst mulige rettigheder.
+Derudover køres den officielle Home Assistant hassfest-validator fra et digest-pinnet image. Image-digesten er indlejret i en shell-`run`-kommando i en composite action, så vedligeholdere skal gennemgå og opdatere den manuelt; Dependabot finder ikke image-referencer indlejret i shell-kommandoer. Et separat, uafhængigt skrivebeskyttet job kører den officielle HACS-validator fra et digest-pinnet image; der er ingen undtagelse baseret på brand. Offlinekontroller af manifestets skema og lokal brand-validering erstatter ikke de eksterne HACS-kontroller af det offentlige repository, dets metadata og kandidatcommittet. Udgivelsesjobbet har den nødvendige `actions: read`-tilladelse. GitHub Actions-tilladelser og fjernindstillinger skal fortsat følge princippet om mindst mulige rettigheder.
 
 Den senest installerede actionlint er version 1.7.12 og genkender ikke GitHubs dokumenterede `queue: max`-nøgle. Den præcise køkonfiguration dækkes af tests; hvis actionlint bruges, udelades kun denne ikke-understøttede nøgleadvarsel. Der findes ikke et actionlint-CI-job.
 
@@ -66,7 +66,7 @@ Push en valideringsgren, der ikke hedder `main`, for at køre GitHub-kontrollern
 
 Dette validerer kandidatpakken, ikke udgivelsesprocessen eller Marketplaces installation af en offentliggjort release. HACS-kontrollen kræver stadig rigtige repository-metadata såsom beskrivelse, emner og en genkendelig licens. Den første gren, der pushes til et tomt repository, kan blive standardgren; det opretter ikke `main` og offentliggør ikke en release.
 
-## Tjekliste for repository-administrator — endnu ikke udført
+## Tjekliste for repository-administrator
 
 Før første udgivelse skal en administrator gennemgå og anvende følgende GitHub-indstillinger:
 
