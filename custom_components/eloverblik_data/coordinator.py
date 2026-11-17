@@ -23,6 +23,7 @@ from .const import (
     DENMARK,
     DOMAIN,
     METADATA_FIELDS,
+    NAME,
 )
 from .models import (
     ApiError,
@@ -61,7 +62,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, MeterData]]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name="ElOverblik Data",
+            name=NAME,
             update_interval=timedelta(hours=entry.options.get(CONF_POLL, 6)),
         )
         self.entry = entry
@@ -346,7 +347,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, MeterData]]):
         self._job = self.entry.async_create_background_task(
             self.hass,
             self._history_job(begin, finish, resume=start is None),
-            "ElOverblik history",
+            f"{NAME} history",
             eager_start=False,
         )
         return dict(self.job_status)
@@ -389,7 +390,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, MeterData]]):
             self.entry.async_start_reauth(self.hass)
         except ApiError as err:
             self.job_status.update(status="error", error=str(err))
-            _LOGGER.warning("ElOverblik historical import failed: %s", err)
+            _LOGGER.warning("%s historical import failed: %s", NAME, err)
         except asyncio.CancelledError:
             self.job_status["status"] = "cancelled"
             raise

@@ -1,9 +1,9 @@
 {
-  "title": "ElOverblik Data",
+  "title": "El-Overblik HA",
   "config": {
     "step": {
       "user": {
-        "title": "Connect ElOverblik",
+        "title": "Connect El-Overblik HA",
         "description": "Enter a Customer API refresh token and already-linked metering points from eloverblik.dk. Readings are delayed, not live.",
         "data": {"refresh_token": "Refresh token", "metering_points": "Metering-point IDs (comma-separated)"}
       },
@@ -22,7 +22,7 @@
       "invalid_auth": "ElOverblik rejected the refresh token. Check that it is an active Customer API token.",
       "cannot_connect": "Could not read ElOverblik data. Try again later.",
       "invalid_meters": "Enter one or more 18-digit metering-point IDs, separated by commas.",
-      "overlapping_meters": "One or more meters are already configured in another ElOverblik Data entry.",
+      "overlapping_meters": "One or more meters are already configured in another El-Overblik HA entry.",
       "missing_relation": "One or more meters cannot be accessed. Check the IDs and link the meters in ElOverblik before continuing."
     },
     "abort": {
@@ -74,7 +74,7 @@
   "exceptions": {
     "authentication_failed": {"message": "ElOverblik rejected authentication. Replace the refresh token using Home Assistant's reauthentication flow."},
     "dated_charges_unavailable": {"message": "ElOverblik's live service does not expose the documented dated-charge endpoint. Current reported charges remain available through Get reported charges. Historical charge calculations are not available."},
-    "entry_unavailable": {"message": "The selected ElOverblik Data entry is not loaded."},
+    "entry_unavailable": {"message": "The selected El-Overblik HA entry is not loaded."},
     "unknown_meter": {"message": "Select only meters configured in this integration entry."},
     "history_busy": {"message": "A historical import is already running. Check its status sensor."},
     "refresh_busy": {"message": "Please wait one minute before refreshing again."},

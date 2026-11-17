@@ -18,7 +18,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.recorder import async_initialize_recorder
 
-from custom_components.eloverblik_data.const import CONF_METERS, CONF_TOKEN, DOMAIN
+from custom_components.eloverblik_data.const import (
+    CONF_METERS,
+    CONF_TOKEN,
+    DOMAIN,
+    NAME,
+)
 
 METER = "001234567890123456"
 OTHER = "001234567890123457"
@@ -68,7 +73,7 @@ def make_entry(meters=None, **kwargs):
     """Construct an entry using public Core APIs, not a version-mismatched harness."""
     return ConfigEntry(
         domain=DOMAIN,
-        title="ElOverblik Data",
+        title=kwargs.get("title", NAME),
         version=1,
         minor_version=1,
         data={CONF_TOKEN: "synthetic-token", CONF_METERS: meters or [METER]},

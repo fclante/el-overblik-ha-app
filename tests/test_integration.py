@@ -13,11 +13,17 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder import statistics as recorder_statistics
 from homeassistant.components.recorder.statistics import statistics_during_period
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
-from custom_components.eloverblik_data.const import CONF_HISTORY, DOMAIN
+from custom_components.eloverblik_data.const import (
+    CONF_HISTORY,
+    DOMAIN,
+    LEGACY_NAME,
+    NAME,
+)
 from custom_components.eloverblik_data.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -125,10 +131,17 @@ async def test_import_waits_for_inflight_recorder_task_before_marking_clean(hass
     assert not history.dirty
 
 
-async def test_full_entry_entities_actions_and_redacted_diagnostics(hass):
+@pytest.mark.parametrize(
+    ("title", "expected_title"), [(LEGACY_NAME, NAME), ("My meters", "My meters")]
+)
+async def test_full_entry_entities_actions_and_redacted_diagnostics(
+    hass, title, expected_title
+):
     today = datetime.now().date()
     entry = make_entry(
-        [METER, OTHER], options={CONF_HISTORY: (today - timedelta(days=1)).isoformat()}
+        [METER, OTHER],
+        title=title,
+        options={CONF_HISTORY: (today - timedelta(days=1)).isoformat()},
     )
 
     async def energy(meters, start, end):
@@ -186,10 +199,16 @@ async def test_full_entry_entities_actions_and_redacted_diagnostics(hass):
         await hass.async_start()
         await hass.async_block_till_done(wait_background_tasks=True)
         coordinator = entry.runtime_data
+        assert entry.title == expected_title
         if coordinator._job:
             await coordinator._job
         await hass.async_block_till_done()
         registry = er.async_get(hass)
+        device = dr.async_get(hass).async_get_device_by_identifier(
+            (DOMAIN, METER), entry.entry_id
+        )
+        assert device is not None
+        assert device.name == f"{NAME} {METER}"
         entities = er.async_entries_for_config_entry(registry, entry.entry_id)
         assert (
             len([e for e in entities if e.unique_id.endswith("consumption_latest")])
@@ -246,8 +265,8 @@ async def test_danish_english_and_fallback(hass):
     danish = await async_get_translations(hass, "da", "config", {DOMAIN})
     fallback = await async_get_translations(hass, "zz", "config", {DOMAIN})
     key = f"component.{DOMAIN}.config.step.user.title"
-    assert english[key] == "Connect ElOverblik"
-    assert danish[key] == "Forbind ElOverblik"
+    assert english[key] == "Connect El-Overblik HA"
+    assert danish[key] == "Forbind El-Overblik HA"
     assert fallback[key] == english[key]
 
 

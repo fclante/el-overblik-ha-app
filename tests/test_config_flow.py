@@ -13,6 +13,7 @@ from custom_components.eloverblik_data.const import (
     CONF_TOKEN,
     DENMARK,
     DOMAIN,
+    NAME,
 )
 from custom_components.eloverblik_data.models import AuthenticationError
 
@@ -34,6 +35,7 @@ async def test_setup_and_normalization(hass, api_mock):
             {CONF_TOKEN: "synthetic-token", CONF_METERS: f" {METER}, {METER} "},
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == NAME
         assert result["data"][CONF_METERS] == [METER]
         await hass.async_block_till_done()
 

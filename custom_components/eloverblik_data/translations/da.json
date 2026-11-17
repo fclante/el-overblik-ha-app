@@ -1,9 +1,9 @@
 {
-  "title": "ElOverblik Data",
+  "title": "El-Overblik HA",
   "config": {
     "step": {
       "user": {
-        "title": "Forbind ElOverblik",
+        "title": "Forbind El-Overblik HA",
         "description": "Indtast et opdateringstoken til Customer API og målepunkter, der allerede er tilknyttet på eloverblik.dk. Målingerne er forsinkede og ikke live.",
         "data": {"refresh_token": "Opdateringstoken", "metering_points": "Målepunkts-ID'er (kommaseparerede)"}
       },
@@ -22,7 +22,7 @@
       "invalid_auth": "ElOverblik afviste tokenet. Kontrollér, at det er et aktivt token til Customer API.",
       "cannot_connect": "Kunne ikke hente data fra ElOverblik. Prøv igen senere.",
       "invalid_meters": "Indtast et eller flere målepunkts-ID'er på 18 cifre, adskilt af kommaer.",
-      "overlapping_meters": "Et eller flere målepunkter er allerede konfigureret i en anden ElOverblik Data-integration.",
+      "overlapping_meters": "Et eller flere målepunkter er allerede konfigureret i en anden El-Overblik HA-integration.",
       "missing_relation": "Et eller flere målepunkter kan ikke tilgås. Kontrollér ID'erne, og tilknyt målepunkterne i ElOverblik, før du fortsætter."
     },
     "abort": {
@@ -74,7 +74,7 @@
   "exceptions": {
     "authentication_failed": {"message": "ElOverblik afviste godkendelsen. Udskift tokenet via Home Assistants funktion til fornyet godkendelse."},
     "dated_charges_unavailable": {"message": "ElOverbliks aktive tjeneste udstiller ikke det dokumenterede endepunkt for daterede afgifter. Aktuelle rapporterede afgifter kan stadig hentes via Hent rapporterede afgifter. Historiske afgiftsberegninger er ikke tilgængelige."},
-    "entry_unavailable": {"message": "Den valgte ElOverblik Data-integration er ikke indlæst."},
+    "entry_unavailable": {"message": "Den valgte El-Overblik HA-integration er ikke indlæst."},
     "unknown_meter": {"message": "Vælg kun målepunkter, der er konfigureret i denne integration."},
     "history_busy": {"message": "En historisk import kører allerede. Se importens statussensor."},
     "refresh_busy": {"message": "Vent et minut, før du opdaterer igen."},

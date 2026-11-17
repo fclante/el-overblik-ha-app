@@ -1,1 +1,1 @@
-"""Tests for ElOverblik Data."""
+"""Tests for El-Overblik HA."""

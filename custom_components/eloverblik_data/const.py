@@ -1,8 +1,10 @@
-"""Constants for ElOverblik Data."""
+"""Constants for El-Overblik HA."""
 
 from zoneinfo import ZoneInfo
 
 DOMAIN = "eloverblik_data"
+NAME = "El-Overblik HA"
+LEGACY_NAME = "ElOverblik Data"
 CONF_TOKEN = "refresh_token"
 CONF_METERS = "metering_points"
 CONF_HISTORY = "history_start"

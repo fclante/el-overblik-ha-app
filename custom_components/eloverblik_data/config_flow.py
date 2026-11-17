@@ -20,6 +20,7 @@ from .const import (
     CONF_TOKEN,
     DENMARK,
     DOMAIN,
+    NAME,
 )
 from .models import (
     ApiError,
@@ -107,7 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if entry:
                     return self.async_update_reload_and_abort(entry, data_updates=data)
-                return self.async_create_entry(title="ElOverblik Data", data=data)
+                return self.async_create_entry(title=NAME, data=data)
         return self.async_show_form(
             step_id=step,
             data_schema=credentials(entry.data if entry else user_input),
