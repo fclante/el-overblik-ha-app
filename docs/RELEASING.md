@@ -15,6 +15,8 @@ The release publisher checks GitHub's private vulnerability reporting setting wi
 
 Final validation and archive construction must use the exact versioned source snapshot selected for that release. A version bump must not be validated at one commit and then published from a different branch tip.
 
+Release tests use an isolated synthetic repository with a fixed initial version, independent of the source snapshot's version. Archive installation checks cover the initial version and later patch and major versions.
+
 ## Validation and release transaction
 
 The default release validation runs, in order:
