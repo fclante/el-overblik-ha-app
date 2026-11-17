@@ -28,6 +28,8 @@ def repository(tmp_path, monkeypatch):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(release.ROOT / release.INTEGRATION / name, target)
     (root / "README.md").write_text("Synthetic documentation\n")
+    # Release checks also run after the real project's version has been bumped.
+    release.set_version(root, "0.1.0")
     release.git("init", "-b", "main", cwd=root)
     release.git("config", "user.name", "Test", cwd=root)
     release.git("config", "user.email", "test@example.invalid", cwd=root)
@@ -138,7 +140,9 @@ def test_invalid_manual_versions_fail(version):
         release.next_version(version, "0.1.8", True)
 
 
-def test_archive_reproducibility_and_isolated_ha_install(repository, tmp_path):
+@pytest.mark.parametrize("version", ["0.1.0", "0.1.1", "1.2.3"])
+def test_archive_reproducibility_and_isolated_ha_install(repository, tmp_path, version):
+    release.set_version(repository, version)
     first = release.build(repository, tmp_path / "first")
     # Unlisted files must not leak into the archive, even before Git ignores them.
     (repository / release.INTEGRATION / ".env").write_text("synthetic-not-a-token")
@@ -154,6 +158,7 @@ def test_archive_reproducibility_and_isolated_ha_install(repository, tmp_path):
         archive.extractall(installed)
     code = """
 import asyncio
+import sys
 from pathlib import Path
 from homeassistant import loader
 from homeassistant.core import HomeAssistant
@@ -163,7 +168,7 @@ async def main():
     integration = await loader.async_get_integration(hass, "eloverblik_data")
     component = await integration.async_get_component()
     assert Path(component.__file__).resolve().parent == Path.cwd() / "custom_components/eloverblik_data"
-    assert integration.version == "0.1.0"
+    assert integration.version == sys.argv[1]
     await hass.async_stop(force=True)
 asyncio.run(main())
 """
@@ -174,7 +179,7 @@ asyncio.run(main())
     }
     env["PYTHONPATH"] = str(config)
     result = subprocess.run(
-        [sys.executable, "-c", code],
+        [sys.executable, "-c", code, version],
         cwd=config,
         env=env,
         text=True,

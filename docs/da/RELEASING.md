@@ -15,6 +15,8 @@ Udgivelsespublisheren kontrollerer indstillingen for GitHubs private rapporterin
 
 Den endelige validering og arkivbygning skal bruge præcis det versionssatte kildesnapshot, der er valgt til udgivelsen. En versionsændring må ikke valideres på ét commit og derefter udgives fra et andet branch-tip.
 
+Udgivelsestests bruger et isoleret syntetisk repository med en fast startversion, uafhængigt af kildesnapshottets version. Kontroller af arkivinstallation dækker startversionen samt senere patch- og major-versioner.
+
 ## Validering og udgivelsestransaktion
 
 Standardvalideringen før udgivelse kører følgende, i rækkefølge:
