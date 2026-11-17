@@ -80,7 +80,7 @@ def versions(root: Path) -> str:
     manifest = json.loads((root / VERSION_FILES[0]).read_text())["version"]
     project = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
     packages = tomllib.loads((root / "uv.lock").read_text())["package"]
-    locked = [p["version"] for p in packages if p["name"] == "eloverblik-data"]
+    locked = [p["version"] for p in packages if p["name"] == "el-overblik-ha"]
     if locked != [project] or manifest != project:
         raise ValueError("Manifest, project and lockfile versions must match")
     parts(project)
@@ -115,7 +115,7 @@ def set_version(root: Path, version: str) -> None:
         ("pyproject.toml", rf'(?m)^(version = "){re.escape(previous)}(")$'),
         (
             "uv.lock",
-            r'(\[\[package\]\]\nname = "eloverblik-data"\nversion = ")[^"]+(")',
+            r'(\[\[package\]\]\nname = "el-overblik-ha"\nversion = ")[^"]+(")',
         ),
     ):
         path = root / filename

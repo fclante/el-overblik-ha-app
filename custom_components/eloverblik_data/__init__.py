@@ -1,4 +1,4 @@
-"""Read-only ElOverblik Customer API integration."""
+"""El-Overblik HA: read-only ElOverblik Customer API integration."""
 
 from datetime import date
 from typing import Any
@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.start import async_at_started
 
 from .api import CustomerApi, RequestGate
-from .const import CONF_METERS, CONF_TOKEN, DOMAIN, PLATFORMS
+from .const import CONF_METERS, CONF_TOKEN, DOMAIN, LEGACY_NAME, NAME, PLATFORMS
 from .coordinator import Coordinator
 from .models import ApiError, AuthenticationError, EndpointUnavailableError, timestamp
 
@@ -129,6 +129,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EloverblikEntry) -> bool:
+    if entry.title == LEGACY_NAME:
+        hass.config_entries.async_update_entry(entry, title=NAME)
     gate = hass.data.setdefault(f"{DOMAIN}_gate", RequestGate())
     coordinator = Coordinator(
         hass,
@@ -144,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EloverblikEntry) -> bool
     @callback
     def started(hass: HomeAssistant) -> None:
         entry.async_create_background_task(
-            hass, coordinator.initial_update(), "ElOverblik initial update"
+            hass, coordinator.initial_update(), f"{NAME} initial update"
         )
 
     entry.async_on_unload(async_at_started(hass, started))

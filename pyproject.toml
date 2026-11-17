@@ -1,7 +1,7 @@
 [project]
-name = "eloverblik-data"
+name = "el-overblik-ha"
 version = "0.1.0"
-description = "Read-only ElOverblik Customer API integration for Home Assistant"
+description = "El-Overblik HA: read-only ElOverblik Customer API integration for Home Assistant"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

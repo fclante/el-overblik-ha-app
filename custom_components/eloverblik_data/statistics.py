@@ -16,7 +16,7 @@ from homeassistant.components.recorder.tasks import SynchronizeTask
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import DOMAIN, NAME
 from .models import Reading, timestamp
 
 
@@ -115,7 +115,7 @@ class MeterHistory:
             metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,
-                name=f"ElOverblik {self.meter} {direction}",
+                name=f"{NAME} {self.meter} {direction}",
                 source=DOMAIN,
                 statistic_id=statistic_id,
                 unit_class="energy",

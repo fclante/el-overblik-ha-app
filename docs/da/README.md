@@ -1,4 +1,4 @@
-# ElOverblik Data til Home Assistant
+# El-Overblik HA
 
 En skrivebeskyttet community-integration til Danmarks [ElOverblik Customer API](https://docs.eloverblik.dk/en/docs/api/customer).
 
@@ -24,15 +24,17 @@ En skrivebeskyttet community-integration til Danmarks [ElOverblik Customer API](
 ### Home Assistant Marketplace
 
 1. Åbn **Settings > Marketplace > Add from link** i Home Assistant.
-2. Tilføj `https://github.com/fclante/el-overblik-ha-app`, og installér **ElOverblik Data**.
+2. Tilføj `https://github.com/fclante/el-overblik-ha-app`, og installér **El-Overblik HA**.
 3. Genstart Home Assistant, hvis du bliver bedt om det.
-4. Åbn **Settings > Devices & services > Add integration > ElOverblik Data**.
+4. Åbn **Settings > Devices & services > Add integration > El-Overblik HA**.
 
 At projektet kan tilføjes via **Add from link** betyder ikke, at det er optaget i et standardkatalog.
 
 ### Manuel installation
 
 Kopiér [`custom_components/eloverblik_data`](../../custom_components/eloverblik_data) til `custom_components/eloverblik_data` i Home Assistants konfigurationsmappe, genstart Home Assistant, og tilføj integrationen.
+
+Visningsnavnet er **El-Overblik HA**. Det tekniske domæne, lagernøgler, statistik-ID'er og arkivfilnavnet beholder `eloverblik_data` af hensyn til eksisterende installationer. Eksisterende standardtitler opdateres ved opsætning; brugerdefinerede titler bevares.
 
 ## Konfiguration
 

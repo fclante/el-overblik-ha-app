@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, NAME
 from .coordinator import Coordinator, MeterData
 
 
@@ -19,7 +19,7 @@ class MeterEntity(CoordinatorEntity[Coordinator]):
         self._attr_translation_key = key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, meter)},
-            name=f"ElOverblik {meter}",
+            name=f"{NAME} {meter}",
             manufacturer="Energinet",
         )
 

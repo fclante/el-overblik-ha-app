@@ -2,7 +2,7 @@
 
 [Læs på dansk](docs/da/SECURITY.md) · [Project overview](README.md)
 
-ElOverblik Data is an independent community integration. Please use this policy to help protect users and their account information.
+El-Overblik HA is an independent community integration. Please use this policy to help protect users and their account information.
 
 ## Reporting a vulnerability
 

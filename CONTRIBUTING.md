@@ -2,7 +2,7 @@
 
 [Læs på dansk](docs/da/CONTRIBUTING.md) · [Project overview](README.md)
 
-Thank you for helping improve ElOverblik Data. This is an independent community integration for Home Assistant, not an official ElOverblik or Home Assistant project. Contributions of code, documentation, translations, and carefully described bug reports are welcome.
+Thank you for helping improve El-Overblik HA. This is an independent community integration for Home Assistant, not an official ElOverblik or Home Assistant project. Contributions of code, documentation, translations, and carefully described bug reports are welcome.
 
 ## Before opening an issue or pull request
 
