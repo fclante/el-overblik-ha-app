@@ -203,6 +203,12 @@ class OptionsFlow(config_entries.OptionsFlow):
         previous = self._settings.get(meter, {})
         errors: dict[str, str] = {}
         if user_input is not None:
+            user_input = {
+                **user_input,
+                "area": user_input["area"].upper()
+                if user_input["area"] != "none"
+                else "none",
+            }
             if user_input["contract"] != "benchmark":
                 try:
                     rate = Decimal(user_input["rate"])
@@ -247,10 +253,10 @@ class OptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "area", default=values.get("area", "none")
+                        "area", default=values.get("area", "none").lower()
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=["none", "DK1", "DK2"], translation_key="price_area"
+                            options=["none", "dk1", "dk2"], translation_key="price_area"
                         )
                     ),
                     vol.Required(

@@ -1,6 +1,8 @@
 """Integration-owned native Lovelace dashboard; user dashboards are never edited."""
 
+import json
 import logging
+from pathlib import Path
 from typing import Any
 
 from homeassistant.components import frontend
@@ -10,7 +12,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import cached_json_fragment, json_fragment
-from homeassistant.helpers.translation import async_get_translations
 
 from .const import CONF_DASHBOARD, DOMAIN, NAME
 from .coordinator import Coordinator
@@ -43,7 +44,7 @@ class Dashboard(LovelaceConfig):
         return "yaml"
 
     def text(self, key: str) -> str:
-        return self.labels[f"component.{DOMAIN}.dashboard.{key}"]
+        return self.labels[key]
 
     async def async_get_info(self) -> dict[str, Any]:
         return {"mode": self.mode, "views": len(self.build()["views"])}
@@ -389,9 +390,13 @@ async def async_setup_dashboard(hass: HomeAssistant, coordinator: Coordinator) -
         )
         return
     lovelace: LovelaceData = hass.data[LOVELACE_DATA]
-    labels = await async_get_translations(
-        hass, hass.config.language, "dashboard", {DOMAIN}
+    # HA's "dashboard" translation section is not supported for custom integrations.
+    catalog = json.loads(
+        await hass.async_add_executor_job(
+            Path(__file__).with_name("dashboard_strings.json").read_text
+        )
     )
+    labels = catalog.get(hass.config.language, catalog["en"])
     dashboard = hass.data.get(DATA_KEY)
     if dashboard is None:
         if URL_PATH in lovelace.dashboards or frontend.async_panel_exists(

@@ -30,6 +30,7 @@ RUNTIME_FILES = {
     "const.py",
     "coordinator.py",
     "dashboard.py",
+    "dashboard_strings.json",
     "diagnostics.py",
     "entity.py",
     "models.py",

@@ -153,6 +153,12 @@ async def test_per_meter_price_options_validate_and_preserve_history(hass, api_m
         },
     )
     assert result["step_id"] == "meter"
+    assert (
+        result["data_schema"](
+            {key: value for key, value in old_contract.items() if key != "area"}
+        )["area"]
+        == "dk1"
+    )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {**old_contract, "rate": "NaN", "area": "none"}
     )
@@ -162,10 +168,11 @@ async def test_per_meter_price_options_validate_and_preserve_history(hass, api_m
     with patch("custom_components.eloverblik_data._reload", new_callable=AsyncMock):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {**old_contract, "rate": "-0.1", "effective": "2026-11-18"},
+            {**old_contract, "area": "dk1", "rate": "-0.1", "effective": "2026-11-18"},
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_METER_SETTINGS][METER]["rate"] == "-0.1"
+    assert entry.options[CONF_METER_SETTINGS][METER]["area"] == "DK1"
     assert entry.options[CONF_POLL] == 12
     assert entry.options[CONF_DASHBOARD] is False
     result = await hass.config_entries.options.async_init(entry.entry_id)

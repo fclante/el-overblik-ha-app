@@ -1,6 +1,9 @@
 {
   "domain": "eloverblik_data",
   "name": "El-Overblik HA",
+  "after_dependencies": [
+    "lovelace"
+  ],
   "categories": [
     "energy.meters_monitoring"
   ],
@@ -10,9 +13,6 @@
   "config_flow": true,
   "dependencies": [
     "recorder"
-  ],
-  "after_dependencies": [
-    "lovelace"
   ],
   "documentation": "https://github.com/fclante/el-overblik-ha-app",
   "iot_class": "cloud_polling",

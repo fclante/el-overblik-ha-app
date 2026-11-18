@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import LOVELACE_DATA, LovelaceData
 from homeassistant.helpers import entity_registry as er
@@ -94,6 +95,29 @@ async def test_dashboard_optout_and_url_collision(hass, caplog):
     )
     assert DATA_KEY not in hass.data
     assert "already in use" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("language", "overview", "empty"),
+    [
+        ("da", "Overblik", "Venter på historiske målinger"),
+        ("fr", "Overview", "Waiting for historical readings"),
+    ],
+)
+async def test_dashboard_copy_uses_own_catalog_and_english_fallback(
+    hass, language, overview, empty
+):
+    hass.config.language = language
+    hass.data[LOVELACE_DATA] = LovelaceData("storage", {}, None, {})
+    entry = make_entry()
+    await async_setup_dashboard(
+        hass, Coordinator(hass, entry, AsyncMock(spec=CustomerApi))
+    )
+    dashboard = hass.data[DATA_KEY]
+    config = await dashboard.async_load(False)
+    assert config["views"][0]["title"] == overview
+    assert empty in json.dumps(config, ensure_ascii=False)
+    await entry._async_process_on_unload(hass)
 
 
 async def test_real_price_entities_roll_over_and_unload_without_market_dependency(hass):
