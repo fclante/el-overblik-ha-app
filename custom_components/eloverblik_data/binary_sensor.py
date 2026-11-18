@@ -41,15 +41,7 @@ class StaleSensor(MeterEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        latest = max(
-            (
-                at + timedelta(hours=1)
-                for values in self.meter_data.history.streams.values()
-                for at, reading in values.items()
-                if reading.kwh is not None
-            ),
-            default=None,
-        )
+        latest = self.meter_data.latest_measurement()
         return (
             not self.coordinator.last_update_success
             or self.meter_data.error is not None

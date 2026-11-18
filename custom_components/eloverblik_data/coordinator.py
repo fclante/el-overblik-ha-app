@@ -52,6 +52,19 @@ class MeterData:
     metadata_errors: dict[str, int | str] = field(default_factory=dict)
     notices: set[str] = field(default_factory=set)
 
+    def latest_measurement(self, direction: str | None = None) -> datetime | None:
+        """Return the end of the latest usable interval, optionally per stream."""
+        return max(
+            (
+                at + timedelta(hours=1)
+                for stream, values in self.history.streams.items()
+                if direction is None or stream == direction
+                for at, reading in values.items()
+                if reading.kwh is not None
+            ),
+            default=None,
+        )
+
 
 class Coordinator(DataUpdateCoordinator[dict[str, MeterData]]):
     """Share one schedule and one history job per entry."""

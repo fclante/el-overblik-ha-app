@@ -306,13 +306,7 @@ class StatusSensor(MeterEntity, SensorEntity):
         if self.key == "last_success":
             return self.meter_data.last_success
         if self.key == "latest_measurement":
-            values = [
-                at + timedelta(hours=1)
-                for values in self.meter_data.history.streams.values()
-                for at, reading in values.items()
-                if reading.kwh is not None
-            ]
-            return max(values) if values else None
+            return self.meter_data.latest_measurement()
         if self.key == "import_status":
             return self.coordinator.job_status["status"]
         if not self.coordinator.last_update_success:
