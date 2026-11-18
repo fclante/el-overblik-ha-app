@@ -68,8 +68,12 @@ Historikken importeres i baggrundsdele; opsætningen venter ikke på en fuld his
 
 Efter installation/genindlæsning åbnes **El-Overblik HA** i Home Assistants sidepanel. Dashboardet styres af integrationen, bruger indbyggede kort og tilpasser sig mobilskærme. Ingen ekstra kort eller separat app er nødvendig. Diagrammer bruger Home Assistants indbyggede History-integration, som er aktiveret i standardkonfigurationen.
 
-- **Overblik:** seneste komplette forbrugsdag, rapporteret månedsforbrug, priser og valgfrie prissammenligninger samt et forbrugsdiagram for to uger pr. målepunkt.
-- **Udforsk målepunkt:** daglige/månedlige forbrugsdiagrammer, separat produktion, dækning, dagens/morgendagens prisplan, billigste kommende komplette time samt forbindelses- og importstatus.
+- **Overblik:** kompakte energinøgletal, målingernes dækningsdato, månedsdækning og et diagram i fuld bredde for to uger pr. målepunkt. Priser og aftaleestimater vises efter opsætning; **Detaljer** åbner målepunktet.
+- **Detaljer:** daglige/månedlige forbrugsdiagrammer, separat produktion, dækning, dagens/morgendagens prisplan, billigste kommende komplette time samt forbindelses- og importstatus.
+
+Normal rapporteringsforsinkelse er information, ikke en advarsel om manglende data. Målinger over tre dage gamle udløser en aldersadvarsel; grænsen er ikke en leveringsgaranti fra kilden. Forbindelsesfejl, manglende måleradgang, måleroplysninger, tariffer og importfejl vises hver for sig. En fejlet tarifforespørgsel til ElOverblik påviser **ikke**, at forbrug eller offentlige priser mangler. Se kildefejl og importstatus under **Detaljer > Datastatus**; gemte målinger vises fortsat.
+
+Markedspriser har selvstændig status: første hentning, manglende aktuel pris, fejlet opdatering med stadig gyldige gemte priser og morgendagens endnu ikke offentliggjorte priser skelnes fra hinanden. Før valg af DK1/DK2 viser overblikket en kort opsætningsbesked i stedet for tomme priskort. Aftaleestimater skjules, indtil en elaftale er indtastet. Deaktiverede entiteter respekteres og forveksles ikke med manglende områdevalg; administrér dem under **Indstillinger > Enheder og tjenester**.
 - **Forsinkelser er synlige:** seneste hentning og seneste måling vises hver for sig. Delvise summer fremstår ikke komplette. Overlappende målepunkter lægges ikke sammen.
 
 Åbn **Indstillinger > Enheder og tjenester > El-Overblik HA > Konfigurer**, og vælg **Indstil markedspriser og elaftale pr. målepunkt**:
