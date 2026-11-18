@@ -24,6 +24,12 @@ uv run mypy custom_components scripts
 uv run python scripts/release.py check
 ```
 
+CI also validates Home Assistant metadata and translations with the pinned hassfest image. Run the same check locally with Docker:
+
+```sh
+docker run --rm --volume "$PWD/custom_components:/github/workspace/custom_components:ro" ghcr.io/home-assistant/hassfest@sha256:b200bb178c5c62f984c2c705c820bd991e5308d6cba6987d24c7d643919ab5cc
+```
+
 For an archive dry run, run checks first, then build to a fresh temporary output directory:
 
 ```sh
