@@ -64,7 +64,31 @@ Der findes bevidst ingen særskilt sprogindstilling for integrationen. Gemte enh
 
 Historikken importeres i baggrundsdele; opsætningen venter ikke på en fuld historikimport. Følg **Historical import** og **Data status**. En fejl for adgangsperioden stopper den berørte import i stedet for lydløst at springe utilgængelige datoer over. Vælg om nødvendigt en startdato, du har adgang til.
 
-## Energy-dashboard
+## El-Overblik HA-dashboard
+
+Efter installation/genindlæsning åbnes **El-Overblik HA** i Home Assistants sidepanel. Dashboardet styres af integrationen, bruger indbyggede kort og tilpasser sig mobilskærme. Ingen ekstra kort eller separat app er nødvendig. Diagrammer bruger Home Assistants indbyggede History-integration, som er aktiveret i standardkonfigurationen.
+
+- **Overblik:** seneste komplette forbrugsdag, rapporteret månedsforbrug, priser og valgfrie prissammenligninger samt et forbrugsdiagram for to uger pr. målepunkt.
+- **Udforsk målepunkt:** daglige/månedlige forbrugsdiagrammer, separat produktion, dækning, dagens/morgendagens prisplan, billigste kommende komplette time samt forbindelses- og importstatus.
+- **Forsinkelser er synlige:** seneste hentning og seneste måling vises hver for sig. Delvise summer fremstår ikke komplette. Overlappende målepunkter lægges ikke sammen.
+
+Åbn **Indstillinger > Enheder og tjenester > El-Overblik HA > Konfigurer**, og vælg **Indstil markedspriser og elaftale pr. målepunkt**:
+
+1. Vælg **DK1** (vest for Storebælt) eller **DK2** (øst). Området gættes ikke; `none` deaktiverer priser for målepunktet.
+2. Behold `benchmark` for kun markedspriser, eller vælg `fixed` (fast energipris) / `spot_markup` (spot plus tillæg).
+3. Indtast den rene energipris eller spottillægget i **DKK/kWh**, om beløbet inkluderer 25 % moms, og aftalens startdato. Resultater normaliseres til **uden moms**.
+
+Priser hentes fra [Energinets DayAheadPrices](https://www.energidataservice.dk/tso-electricity/DayAheadPrices) i 15-minutters intervaller. Begge danske prisområder deler en lokal, vedvarende cache på tværs af integrationsposter. Forespørgsler indeholder kun offentlige datoer/områder, aldrig token, målepunkts-ID, forbrug eller aftale. Integrationen kontrollerer omkring offentliggørelsen, respekterer fejl/hastighedsgrænser og opfinder ikke manglende priser for i morgen. Valutaomregningen kan afvige fra din leverandørs.
+
+Anbefalingen af billigste time bruger fire sammenhængende fremtidige kvarterer. Den inkluderer aldrig et påbegyndt kvarter eller et hul i prisdata. Tidsstempler inkluderer UTC-forskydning, så gentagne timer ved sommertidsskift kan skelnes. Viste tider følger Home Assistants tidszone; dagssummer følger danske kalenderdage.
+
+**Sammenligninger er estimater for ren energi, ikke din elregning eller en leverandøranbefaling.** For seneste komplette forbrugsdag sammenlignes din aftale med engrospriser for **samme forbrug og periode**. Hver forbrugstime bruger gennemsnittet af fire spotpriser med antaget jævnt forbrug inden for timen. Den faktiske kvartersprofil kan ikke genskabes. Positiv forskel betyder merpris mod engros; negativ betyder rabat, ikke en garanteret besparelse. Moms, nettariffer, elafgift, abonnementer og gebyrer er ikke inkluderet.
+
+Sammenligningen kræver komplette matchende målinger/priser og gyldig aftaledato. Automatisk prishistorik er begrænset til de seneste 31 dage; prisdatasættet starter 1. oktober 2025. Manglende/ældre data og forbrug før aftalens startdato forbliver tydeligt utilgængelige. Ændringer af historiske aftalevilkår kræver ny startdato. Der gemmes ikke et historisk aftaleregister; ældre estimater uden for ny gyldighed bliver utilgængelige.
+
+Fravælg **Vis El-Overblik HA i sidepanelet** i hver integrationspost for at skjule dashboardet. Eksisterende dashboards, herunder Energy, ændres aldrig. Dashboardet er skrivebeskyttet; kopiér kort til dit eget dashboard for at tilpasse dem. En eksisterende `/el-overblik-ha`-adresse efterlades urørt, og konflikten logges. Installationer uden Lovelace beholder entiteterne. Statiske overskrifter følger Home Assistants konfigurerede sprog (dansk/engelsk); indbyggede entiteter og kontroller følger normal sprogadfærd.
+
+## Home Assistant Energy-dashboard
 
 Når målingerne er importeret, skal du vælge den relevante **statistik**, ikke en oversigtssensor:
 
@@ -86,7 +110,7 @@ Integrationen ændrer ikke konfigurationen af dit Energy-dashboard.
 
 ## Tariffer og omkostninger
 
-**Denne version beregner ikke en fuld elregning, en aktuel samlet DKK/kWh-pris, momsregulering eller historiske omkostningsestimater.** Det aktuelle skema fastslår ikke alle betydninger af enheder, faktureringsperioder, moms og afgiftskategorier, som kræves til sikker beregning.
+**ElOverbliks afgifter bruges ikke til at beregne en fuld elregning eller en aktuel samlet DKK/kWh-pris.** Det aktuelle skema fastslår ikke alle betydninger af enheder, faktureringsperioder, moms og afgiftskategorier, som kræves til sikker beregning. De valgfrie, brugeropsatte estimater for ren energi ovenfor løser ikke disse afgiftsbegrænsninger.
 
 I stedet tilbyder integrationen:
 
@@ -99,7 +123,7 @@ I stedet tilbyder integrationen:
 
 `cost_status: unsupported_semantics` gør beregningsbegrænsningen tydelig. Tariff-entiteter hævder ikke, at en rapporteret pris er den aktuelt gældende sats. Fremtidige planer er kun tilgængelige, hvis ElOverblik returnerer dem.
 
-Gang ikke gammelt forbrug med dagens tarif, og brug ikke en aktuel pris-entitet til at prissætte forsinkede historiske målinger. ElOverbliks afgifter fastslår ikke hele din spotpris-/leverandøraftale. Omkostningsberegning er fortsat deaktiveret, indtil kildens betydninger er verificeret; ukendte komponenter behandles aldrig som nul.
+Gang ikke gammelt forbrug med dagens tarif, og brug ikke en aktuel pris-entitet til at prissætte forsinkede historiske målinger. ElOverbliks afgifter fastslår ikke hele din spotpris-/leverandøraftale. Beregning fra kildeafgifter er fortsat deaktiveret, indtil kildens betydninger er verificeret; ukendte komponenter behandles aldrig som nul.
 
 ## Handlinger
 
