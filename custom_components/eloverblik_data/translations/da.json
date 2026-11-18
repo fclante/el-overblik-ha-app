@@ -35,14 +35,28 @@
       "init": {
         "title": "Historik og opdateringer",
         "description": "Importér som standard 12 måneder, eller vælg al tilgængelig historik. Sproget følger din Home Assistant-profil (dansk eller engelsk).",
-        "data": {"all_history": "Importér al tilgængelig historik", "history_start": "Startdato for historik", "poll_hours": "Opdateringsinterval (timer)"},
+        "data": {"all_history": "Importér al tilgængelig historik", "history_start": "Startdato for historik", "poll_hours": "Opdateringsinterval (timer)", "dashboard": "Vis El-Overblik HA i sidepanelet", "configure_prices": "Indstil markedspriser og elaftale pr. målepunkt"},
         "data_description": {"all_history": "De foregående fem år samt indeværende år, afhængigt af adgang.", "history_start": "Ignoreres, når al tilgængelig historik er valgt.", "poll_hours": "Mellem 1 og 24 timer. Målinger kan være flere dage forsinkede."}
+      },
+      "meter": {
+        "title": "Priser for målepunkt, der slutter på {meter}",
+        "description": "Vælg DK1 (vest for Storebælt) eller DK2 (øst). Valgfri sammenligning af ren energipris: fast pris eller spot plus tillæg i DKK/kWh. Uden nettariffer, elafgift og abonnement. Indtastninger med moms divideres med 1,25; resultater er uden moms. Startdatoen bekræfter aftalens gyldighed. Ændrede historiske vilkår kræver ny startdato; ældre estimater bliver utilgængelige.",
+        "data": {"area": "Prisområde", "contract": "Energiaftale", "rate": "Fast energipris eller spottillæg (DKK/kWh)", "vat_included": "Indtastet pris/tillæg inkluderer 25 % moms", "effective": "Aftalens startdato"}
       }
     },
-    "error": {"invalid_date": "Vælg en dato inden for de foregående fem år samt indeværende år og senest i dag."}
+    "error": {"invalid_date": "Vælg en gyldig dato (historik skal være inden for API-perioden og senest i dag).", "invalid_rate": "Indtast et endeligt decimaltal i DKK/kWh.", "choose_area": "Vælg DK1 eller DK2 til aftalesammenligning.", "new_effective_date": "Vælg en ny startdato, når historiske aftalevilkår ændres."}
+  },
+  "selector": {
+    "price_area": {"options": {"none": "Deaktiveret", "dk1": "DK1 · Vest for Storebælt", "dk2": "DK2 · Øst for Storebælt"}},
+    "contract": {"options": {"benchmark": "Kun markedspriser", "fixed": "Fast energipris", "spot_markup": "Spotpris plus tillæg"}}
   },
   "entity": {
     "sensor": {
+      "market_price": {"name": "Engrosspotpris"},
+      "cheapest_hour": {"name": "Billigste kommende time"},
+      "energy_cost": {"name": "Anslået energiomkostning med aftale"},
+      "market_cost": {"name": "Anslået energiomkostning til engrospris"},
+      "market_difference": {"name": "Merpris / rabat på energi"},
       "consumption_latest": {"name": "Senest rapporterede forbrug"},
       "consumption_day": {"name": "Forbrug på seneste komplette dag"},
       "consumption_month": {"name": "Rapporteret forbrug denne måned"},

@@ -61,6 +61,10 @@ async def hass(tmp_path):
                 "custom_components.eloverblik_data.config_flow.async_get_clientsession",
                 return_value=session,
             ),
+            patch(
+                "custom_components.eloverblik_data.market.async_get_clientsession",
+                return_value=session,
+            ),
         ):
             yield instance
             for entry in instance.config_entries.async_entries():

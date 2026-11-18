@@ -1,6 +1,7 @@
 """El-Overblik HA: read-only ElOverblik Customer API integration."""
 
-from datetime import date
+import asyncio
+from datetime import date, datetime
 from typing import Any
 
 import probatio as vol
@@ -13,9 +14,21 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.start import async_at_started
 
 from .api import CustomerApi, RequestGate
-from .const import CONF_METERS, CONF_TOKEN, DOMAIN, LEGACY_NAME, NAME, PLATFORMS
+from .const import (
+    CONF_METER_SETTINGS,
+    CONF_METERS,
+    CONF_TOKEN,
+    DENMARK,
+    DOMAIN,
+    LEGACY_NAME,
+    NAME,
+    PLATFORMS,
+)
 from .coordinator import Coordinator
+from .dashboard import async_setup_dashboard
+from .market import MARKET_KEY, MarketCoordinator
 from .models import ApiError, AuthenticationError, EndpointUnavailableError, timestamp
+from .pricing import complete_day
 
 type EloverblikEntry = ConfigEntry[Coordinator]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -140,13 +153,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: EloverblikEntry) -> bool
     entry.runtime_data = coordinator
     await coordinator.load()
     await coordinator.async_config_entry_first_refresh()
+    settings = entry.options.get(CONF_METER_SETTINGS, {})
+    if any(
+        settings.get(meter, {}).get("area") in {"DK1", "DK2"}
+        for meter in coordinator.meters
+    ):
+        async with hass.data.setdefault(f"{MARKET_KEY}_lock", asyncio.Lock()):
+            market = hass.data.get(MARKET_KEY)
+            if market is None:
+                market = MarketCoordinator(hass)
+                await market.load()
+                hass.data[MARKET_KEY] = market
+            coordinator.market = market
+
+        def requested_days() -> set[date]:
+            days = set()
+            for meter, state in coordinator.states.items():
+                configured = settings.get(meter, {})
+                if (
+                    configured.get("area") not in {"DK1", "DK2"}
+                    or configured.get("contract", "benchmark") == "benchmark"
+                ):
+                    continue
+                day = complete_day(
+                    state.history.streams.get("consumption", {}), datetime.now(DENMARK)
+                )
+                if day["complete"]:
+                    days.add(
+                        datetime.fromisoformat(day["period_start"])
+                        .astimezone(DENMARK)
+                        .date()
+                    )
+            return days
+
+        market.owners[entry.entry_id] = requested_days
+
+        @callback
+        def release_market() -> None:
+            market.owners.pop(entry.entry_id, None)
+
+        entry.async_on_unload(release_market)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_setup_dashboard(hass, coordinator)
     entry.async_on_unload(entry.add_update_listener(_reload))
 
     @callback
     def started(hass: HomeAssistant) -> None:
+        async def initial_update() -> None:
+            await coordinator.initial_update()
+            if coordinator.market:
+                await coordinator.market.async_request_refresh()
+
         entry.async_create_background_task(
-            hass, coordinator.initial_update(), f"{NAME} initial update"
+            hass, initial_update(), f"{NAME} initial update"
         )
 
     entry.async_on_unload(async_at_started(hass, started))

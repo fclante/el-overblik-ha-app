@@ -8,6 +8,7 @@ A read-only custom integration for Denmark's [ElOverblik Customer API](https://d
 
 ## Features
 
+- Native sidebar dashboard with consumption charts, Danish market prices, optional energy-only contract comparisons, and data-health indicators.
 - Multiple explicitly selected metering points; one Home Assistant device per meter.
 - Consumption and production history as hourly external statistics for the Energy dashboard.
 - Latest reported interval, most recent complete day, and reported month/year energy summaries.
@@ -64,7 +65,31 @@ There is deliberately no separate integration language switch. Persisted entity 
 
 History is imported in background chunks; setup does not wait for a complete backfill. Watch **Historical import** and **Data status**. An access-period error stops the affected import rather than silently skipping inaccessible dates. Select an authorized start date if necessary.
 
-## Energy dashboard
+## El-Overblik HA dashboard
+
+After installation/reload, open **El-Overblik HA** in Home Assistant's sidebar. The integration-managed dashboard uses built-in cards, supports mobile layouts, and needs no custom cards or separate app. Charts use Home Assistant's built-in History integration, which is enabled in the default configuration.
+
+- **Overview:** latest complete-day consumption, reported monthly energy, prices and optional cost comparisons, with a two-week consumption chart per meter.
+- **Explore this meter:** daily/monthly consumption charts, separate production where reported, coverage, today/tomorrow's price schedule, cheapest upcoming complete hour, and connection/import health.
+- **Delayed data stays explicit:** successful fetching and latest measurement are shown separately. Partial totals are not presented as complete, and overlapping meters are not added together.
+
+Under **Settings > Devices & services > El-Overblik HA > Configure**, select **Configure market prices and contracts per meter**:
+
+1. Select **DK1** (west of the Great Belt) or **DK2** (east). No area is guessed; `none` disables price fetching for that meter.
+2. Leave the contract as `benchmark` for market prices only, or choose `fixed` / `spot_markup`.
+3. Enter the fixed **energy-only** price or supplier spot markup in **DKK/kWh**, whether it includes 25% VAT, and the date these terms became effective. Results are normalized to **exclude VAT**.
+
+Prices come from [Energinet's DayAheadPrices](https://www.energidataservice.dk/tso-electricity/DayAheadPrices), in 15-minute intervals. Both Danish areas share a local persistent cache across integration entries. Requests contain public dates/areas only, never your token, meter IDs, readings, or contract. The integration checks around publication time, backs off on errors/rate limits, and does not invent tomorrow's unpublished prices. DKK exchange-rate conversion can differ from your supplier's.
+
+The cheapest-hour recommendation uses four consecutive future quarters; it never includes an elapsed quarter or bridges a missing interval. Schedule timestamps include UTC offsets to distinguish repeated DST hours. Displayed times follow your Home Assistant timezone; day summaries use Danish calendar days.
+
+**Cost comparisons are estimates for energy only, not your bill or a supplier recommendation.** For the most recent complete consumption day, they compare your configured contract with wholesale prices for the **same consumption and period**. Hourly energy uses the average of its four spot prices, assuming consumption is uniform within each hour. This cannot recover your actual quarter-hour billing profile. Positive difference means a premium to wholesale; negative means a discount, not a guaranteed achievable saving. Results exclude VAT, grid charges, electricity taxes, subscriptions, and fees.
+
+Comparisons require complete matching energy/prices and a valid contract date. Automatic price history is bounded to the last 31 days; the feed begins on 1 October 2025. Missing data, older periods, and readings predating your contract remain explicitly unavailable. Changing historical contract terms requires a new effective date; the integration does not keep a historical contract ledger, and older estimates outside the new validity become unavailable.
+
+Disable **Show El-Overblik HA sidebar dashboard** in each entry's options to opt out. Existing dashboards, including Energy, are never changed. The managed dashboard is read-only; copy cards into your own dashboard to customize them. A conflicting `/el-overblik-ha` URL is left untouched and logged. Headless installations still expose entities without requiring Lovelace. Static dashboard headings follow HA's configured language (Danish/English); native entities/controls follow HA's usual language behavior.
+
+## Home Assistant Energy dashboard
 
 After readings have been imported, select the appropriate **statistic**, not a summary sensor:
 
@@ -86,7 +111,7 @@ The integration does not modify your Energy dashboard configuration.
 
 ## Tariffs and costs
 
-**No complete bill, current DKK/kWh total, VAT adjustment, or historical cost estimate is calculated in this release.** The current schema does not sufficiently establish all unit, billing-period, VAT, and charge-category semantics needed for safe arithmetic.
+**ElOverblik charges are not used to calculate a complete bill or an all-in current DKK/kWh rate.** The current schema does not sufficiently establish all unit, billing-period, VAT, and charge-category semantics needed for safe arithmetic. Optional user-configured energy-only estimates are described above; they do not resolve these charge limitations.
 
 Instead, the integration exposes:
 
@@ -99,7 +124,7 @@ Instead, the integration exposes:
 
 `cost_status: unsupported_semantics` makes the calculation limitation explicit. Tariff entities do not assert that a source price is the currently applicable rate. Future schedules are available only when returned by ElOverblik.
 
-Do not multiply old consumption by today's tariff or use a current-price entity to price delayed historical measurements. ElOverblik charges do not establish your complete spot-price/supplier contract. Cost estimation remains gated until source semantics can be verified; unknown components are never treated as zero.
+Do not multiply old consumption by today's tariff or use a current-price entity to price delayed historical measurements. ElOverblik charges do not establish your complete spot-price/supplier contract. Source-charge calculations remain gated until source semantics can be verified; unknown components are never treated as zero.
 
 ## Actions
 

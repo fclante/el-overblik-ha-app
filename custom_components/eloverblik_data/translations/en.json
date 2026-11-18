@@ -35,14 +35,28 @@
       "init": {
         "title": "History and updates",
         "description": "Import 12 months by default or choose all available history. Language follows your Home Assistant profile (Danish or English).",
-        "data": {"all_history": "Import all available history", "history_start": "History start date", "poll_hours": "Refresh interval (hours)"},
+        "data": {"all_history": "Import all available history", "history_start": "History start date", "poll_hours": "Refresh interval (hours)", "dashboard": "Show El-Overblik HA sidebar dashboard", "configure_prices": "Configure market prices and contracts per meter"},
         "data_description": {"all_history": "Previous five years plus the current year, subject to access.", "history_start": "Ignored when all available history is selected.", "poll_hours": "Between 1 and 24 hours. Readings may arrive several days late."}
+      },
+      "meter": {
+        "title": "Prices for meter ending {meter}",
+        "description": "Choose DK1 (west of the Great Belt) or DK2 (east). Optional energy-only comparison: fixed rate or spot plus markup, in DKK/kWh. Excludes grid charges, electricity taxes and subscriptions. VAT-inclusive inputs are divided by 1.25; results exclude VAT. The effective date confirms when these terms apply. Changing historical terms requires a new effective date; older estimates become unavailable.",
+        "data": {"area": "Market area", "contract": "Energy contract", "rate": "Fixed energy rate or spot markup (DKK/kWh)", "vat_included": "Entered rate/markup includes 25% VAT", "effective": "Contract effective date"}
       }
     },
-    "error": {"invalid_date": "Choose a date within the previous five years plus the current year, and no later than today."}
+    "error": {"invalid_date": "Choose a valid date (history must be within API retention and no later than today).", "invalid_rate": "Enter a finite decimal rate in DKK/kWh.", "choose_area": "Choose DK1 or DK2 for a contract comparison.", "new_effective_date": "Set a new effective date when changing historical contract terms."}
+  },
+  "selector": {
+    "price_area": {"options": {"none": "Disabled", "dk1": "DK1 · West of the Great Belt", "dk2": "DK2 · East of the Great Belt"}},
+    "contract": {"options": {"benchmark": "Market prices only", "fixed": "Fixed energy rate", "spot_markup": "Spot price plus markup"}}
   },
   "entity": {
     "sensor": {
+      "market_price": {"name": "Wholesale spot price"},
+      "cheapest_hour": {"name": "Cheapest upcoming hour"},
+      "energy_cost": {"name": "Estimated contract energy cost"},
+      "market_cost": {"name": "Estimated wholesale energy cost"},
+      "market_difference": {"name": "Energy premium / discount"},
       "consumption_latest": {"name": "Latest reported consumption"},
       "consumption_day": {"name": "Most recent complete day's consumption"},
       "consumption_month": {"name": "Reported consumption this month"},

@@ -1,6 +1,9 @@
 {
   "domain": "eloverblik_data",
   "name": "El-Overblik HA",
+  "after_dependencies": [
+    "lovelace"
+  ],
   "categories": [
     "energy.meters_monitoring"
   ],
