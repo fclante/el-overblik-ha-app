@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import probatio as vol
@@ -14,7 +15,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import CustomerApi, RequestGate
 from .const import (
     CONF_ALL_HISTORY,
+    CONF_DASHBOARD,
     CONF_HISTORY,
+    CONF_METER_SETTINGS,
     CONF_METERS,
     CONF_POLL,
     CONF_TOKEN,
@@ -156,7 +159,16 @@ class OptionsFlow(config_entries.OptionsFlow):
             except TypeError, ValueError:
                 errors[CONF_HISTORY] = "invalid_date"
             else:
-                return self.async_create_entry(title="", data=user_input)
+                self._options = {**self.config_entry.options, **user_input}
+                configure = self._options.pop("configure_prices", False)
+                if configure:
+                    self._meters = list(self.config_entry.data[CONF_METERS])
+                    self._index = 0
+                    self._settings = dict(
+                        self.config_entry.options.get(CONF_METER_SETTINGS, {})
+                    )
+                    return await self.async_step_meter()
+                return self.async_create_entry(title="", data=self._options)
         options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
@@ -175,6 +187,90 @@ class OptionsFlow(config_entries.OptionsFlow):
                     vol.Required(CONF_POLL, default=options.get(CONF_POLL, 6)): vol.All(
                         vol.Coerce(int), vol.Range(min=1, max=24)
                     ),
+                    vol.Optional(
+                        CONF_DASHBOARD, default=options.get(CONF_DASHBOARD, True)
+                    ): bool,
+                    vol.Optional("configure_prices", default=False): bool,
+                }
+            ),
+        )
+
+    async def async_step_meter(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure one meter at a time; no region or contract is inferred."""
+        meter = self._meters[self._index]
+        previous = self._settings.get(meter, {})
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if user_input["contract"] != "benchmark":
+                try:
+                    rate = Decimal(user_input["rate"])
+                    if not rate.is_finite():
+                        raise ValueError
+                except InvalidOperation, ValueError:
+                    errors["rate"] = "invalid_rate"
+                try:
+                    date.fromisoformat(user_input["effective"])
+                except TypeError, ValueError:
+                    errors["effective"] = "invalid_date"
+                if user_input["area"] == "none":
+                    errors["area"] = "choose_area"
+                changed = any(
+                    user_input[key] != previous.get(key)
+                    for key in ("contract", "rate", "vat_included")
+                )
+                if (
+                    previous.get("contract", "benchmark") != "benchmark"
+                    and changed
+                    and user_input["effective"] == previous.get("effective")
+                    and user_input["effective"]
+                    < datetime.now(DENMARK).date().isoformat()
+                ):
+                    errors["effective"] = "new_effective_date"
+            if not errors:
+                self._settings[meter] = user_input
+                self._index += 1
+                if self._index < len(self._meters):
+                    return await self.async_step_meter()
+                self._options[CONF_METER_SETTINGS] = {
+                    key: value
+                    for key, value in self._settings.items()
+                    if key in self._meters
+                }
+                return self.async_create_entry(title="", data=self._options)
+        values = {**previous, **(user_input or {})}
+        return self.async_show_form(
+            step_id="meter",
+            description_placeholders={"meter": meter[-4:]},
+            errors=errors,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "area", default=values.get("area", "none")
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=["none", "DK1", "DK2"], translation_key="price_area"
+                        )
+                    ),
+                    vol.Required(
+                        "contract", default=values.get("contract", "benchmark")
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=["benchmark", "fixed", "spot_markup"],
+                            translation_key="contract",
+                        )
+                    ),
+                    vol.Required("rate", default=values.get("rate", "0")): str,
+                    vol.Required(
+                        "vat_included", default=values.get("vat_included", True)
+                    ): bool,
+                    vol.Required(
+                        "effective",
+                        default=values.get(
+                            "effective", datetime.now(DENMARK).date().isoformat()
+                        ),
+                    ): selector.DateSelector(),
                 }
             ),
         )

@@ -7,7 +7,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.eloverblik_data.const import (
     CONF_ALL_HISTORY,
+    CONF_DASHBOARD,
     CONF_HISTORY,
+    CONF_METER_SETTINGS,
     CONF_METERS,
     CONF_POLL,
     CONF_TOKEN,
@@ -124,3 +126,56 @@ async def test_reauthentication_replaces_token_without_changing_meters(hass, api
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_METERS] == [METER]
     assert entry.data[CONF_TOKEN] == "synthetic-replacement"
+
+
+async def test_per_meter_price_options_validate_and_preserve_history(hass, api_mock):
+    old_contract = {
+        "area": "DK1",
+        "contract": "fixed",
+        "rate": "1.25",
+        "vat_included": True,
+        "effective": "2026-01-01",
+    }
+    entry = make_entry(options={CONF_METER_SETTINGS: {METER: old_contract}})
+    with patch(
+        "custom_components.eloverblik_data.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_add(entry)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_ALL_HISTORY: True,
+            CONF_HISTORY: "2026-01-01",
+            CONF_POLL: 12,
+            CONF_DASHBOARD: False,
+            "configure_prices": True,
+        },
+    )
+    assert result["step_id"] == "meter"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {**old_contract, "rate": "NaN", "area": "none"}
+    )
+    assert result["errors"]["rate"] == "invalid_rate"
+    assert result["errors"]["area"] == "choose_area"
+    assert result["errors"]["effective"] == "new_effective_date"
+    with patch("custom_components.eloverblik_data._reload", new_callable=AsyncMock):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {**old_contract, "rate": "-0.1", "effective": "2026-11-18"},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_METER_SETTINGS][METER]["rate"] == "-0.1"
+    assert entry.options[CONF_POLL] == 12
+    assert entry.options[CONF_DASHBOARD] is False
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    with patch("custom_components.eloverblik_data._reload", new_callable=AsyncMock):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_ALL_HISTORY: True,
+                CONF_HISTORY: "2026-01-01",
+                CONF_POLL: 6,
+            },
+        )
+    assert entry.options[CONF_METER_SETTINGS][METER]["rate"] == "-0.1"

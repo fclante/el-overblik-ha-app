@@ -25,6 +25,7 @@ from .const import (
     METADATA_FIELDS,
     NAME,
 )
+from .market import MarketCoordinator
 from .models import (
     ApiError,
     AuthenticationError,
@@ -66,6 +67,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, MeterData]]):
             update_interval=timedelta(hours=entry.options.get(CONF_POLL, 6)),
         )
         self.entry = entry
+        self.market: MarketCoordinator | None = None
         self.api = api
         self.meters = list(entry.data[CONF_METERS])
         self.states = {

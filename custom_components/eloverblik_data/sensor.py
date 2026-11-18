@@ -11,10 +11,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import EloverblikEntry
-from .const import DENMARK
+from .const import CONF_METER_SETTINGS, DENMARK
 from .coordinator import ACCESS_ERRORS, Coordinator
 from .entity import MeterEntity
-from .models import day_bounds, summary
+from .models import summary
+from .pricing import (
+    cheapest_hour,
+    comparison,
+    complete_day,
+    current_price,
+    day_prices,
+    prices_complete,
+)
 
 
 async def async_setup_entry(
@@ -36,6 +44,19 @@ async def async_setup_entry(
                 if (meter, key) not in created:
                     created.add((meter, key))
                     entities.append(StatusSensor(coordinator, meter, key))
+            if coordinator.market and entry.options.get(CONF_METER_SETTINGS, {}).get(
+                meter, {}
+            ).get("area") in {"DK1", "DK2"}:
+                for key in (
+                    "market_price",
+                    "cheapest_hour",
+                    "energy_cost",
+                    "market_cost",
+                    "market_difference",
+                ):
+                    if (meter, key) not in created:
+                        created.add((meter, key))
+                        entities.append(PriceSensor(coordinator, meter, key))
             for key in (
                 "estimatedAnnualVolume",
                 "powerLimitKW",
@@ -108,22 +129,7 @@ class EnergySensor(MeterEntity, SensorEntity):
                 "quality": latest.quality,
             }
         if self.period == "day":
-            counts: dict[Any, int] = {}
-            for reading in usable:
-                day = reading.start.astimezone(DENMARK).date()
-                counts[day] = counts.get(day, 0) + 1
-            days = sorted(
-                {r.start.astimezone(DENMARK).date() for r in usable}, reverse=True
-            )
-            for day in days:
-                start, end = day_bounds(day)
-                if end <= now.astimezone(UTC) and counts[day] == int(
-                    (end - start).total_seconds() // 3600
-                ):
-                    result = summary(readings, start, end)
-                    if result["complete"]:
-                        return result
-            return {"energy": None, "complete": False}
+            return complete_day(readings, now)
         start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         if self.period == "year":
             start = start.replace(month=1)
@@ -142,6 +148,131 @@ class EnergySensor(MeterEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         return {key: value for key, value in self._value().items() if key != "energy"}
+
+
+class PriceSensor(MeterEntity, SensorEntity):
+    """Public wholesale rates and separately identified contract estimates."""
+
+    def __init__(self, coordinator: Coordinator, meter: str, key: str) -> None:
+        super().__init__(coordinator, meter, key)
+        self.key = key
+        self._last_day: str | None = None
+        self._attr_native_unit_of_measurement = (
+            "DKK/kWh" if key in {"market_price", "cheapest_hour"} else "DKK"
+        )
+        self._attr_suggested_display_precision = (
+            3 if key in {"market_price", "cheapest_hour"} else 2
+        )
+        self._attr_icon = (
+            "mdi:chart-timeline-variant" if key == "market_price" else "mdi:cash"
+        )
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        market = self.coordinator.market
+        assert market is not None
+        self.async_on_remove(market.async_add_listener(self.async_write_ha_state))
+        self.async_on_remove(
+            async_track_utc_time_change(
+                self.hass, self._tick, minute=[0, 15, 30, 45], second=0
+            )
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        market = self.coordinator.market
+        if self.key == "market_price" and market:
+            day = complete_day(
+                self.meter_data.history.streams.get("consumption", {}),
+                datetime.now(UTC),
+            ).get("period_start")
+            if day != self._last_day:
+                self._last_day = day
+                self.hass.async_create_task(market.async_request_refresh())
+        super()._handle_coordinator_update()
+
+    @callback
+    def _tick(self, now: datetime) -> None:
+        self.async_write_ha_state()
+
+    def _value(self) -> dict[str, Any]:
+        market = self.coordinator.market
+        assert market is not None
+        settings = self.coordinator.entry.options[CONF_METER_SETTINGS][self.meter]
+        prices = market.data[settings["area"]]
+        now = datetime.now(UTC)
+        common = {
+            "area": settings["area"],
+            "source": "Energinet DayAheadPrices",
+            "fetched_at": market.fetched_at.isoformat() if market.fetched_at else None,
+            "market_error": market.error,
+            "latest_published_interval_end": (
+                max(prices) + timedelta(minutes=15)
+            ).isoformat()
+            if prices
+            else None,
+            "vat_basis": "excluding_vat",
+            "scope": "energy_only",
+        }
+        if self.key == "market_price":
+            today = now.astimezone(DENMARK).date()
+            schedules = {}
+            for label, day in (
+                ("today", today),
+                ("tomorrow", today + timedelta(days=1)),
+            ):
+                values = day_prices(prices, day)
+                complete = prices_complete(prices, day)
+                schedules[label] = {
+                    "complete": complete,
+                    "minimum": float(min(price for _, price in values))
+                    if complete
+                    else None,
+                    "maximum": float(max(price for _, price in values))
+                    if complete
+                    else None,
+                    "average": float(
+                        sum((price for _, price in values), start=0) / len(values)
+                    )
+                    if complete
+                    else None,
+                    "intervals": [
+                        {
+                            "start": at.astimezone(DENMARK).isoformat(),
+                            "price": float(price),
+                        }
+                        for at, price in values
+                    ],
+                }
+            price = current_price(prices, now)
+            return {
+                **common,
+                **schedules,
+                "value": float(price) if price is not None else None,
+            }
+        if self.key == "cheapest_hour":
+            window = cheapest_hour(prices, now)
+            return {**common, **window, "value": window.pop("price")}
+        result = comparison(
+            self.meter_data.history.streams.get("consumption", {}),
+            prices,
+            settings,
+            now,
+        )
+        field = {
+            "energy_cost": "contract_cost",
+            "market_cost": "market_cost",
+            "market_difference": "difference",
+        }[self.key]
+        return {**common, **result, "value": result.get(field)}
+
+    @property
+    def native_value(self) -> float | None:
+        return self._value()["value"]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {key: value for key, value in self._value().items() if key != "value"}
 
 
 class StatusSensor(MeterEntity, SensorEntity):

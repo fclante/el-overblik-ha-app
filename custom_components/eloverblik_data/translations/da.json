@@ -35,14 +35,58 @@
       "init": {
         "title": "Historik og opdateringer",
         "description": "Importér som standard 12 måneder, eller vælg al tilgængelig historik. Sproget følger din Home Assistant-profil (dansk eller engelsk).",
-        "data": {"all_history": "Importér al tilgængelig historik", "history_start": "Startdato for historik", "poll_hours": "Opdateringsinterval (timer)"},
+        "data": {"all_history": "Importér al tilgængelig historik", "history_start": "Startdato for historik", "poll_hours": "Opdateringsinterval (timer)", "dashboard": "Vis El-Overblik HA i sidepanelet", "configure_prices": "Indstil markedspriser og elaftale pr. målepunkt"},
         "data_description": {"all_history": "De foregående fem år samt indeværende år, afhængigt af adgang.", "history_start": "Ignoreres, når al tilgængelig historik er valgt.", "poll_hours": "Mellem 1 og 24 timer. Målinger kan være flere dage forsinkede."}
+      },
+      "meter": {
+        "title": "Priser for målepunkt, der slutter på {meter}",
+        "description": "Vælg DK1 (vest for Storebælt) eller DK2 (øst). Valgfri sammenligning af ren energipris: fast pris eller spot plus tillæg i DKK/kWh. Uden nettariffer, elafgift og abonnement. Indtastninger med moms divideres med 1,25; resultater er uden moms. Startdatoen bekræfter aftalens gyldighed. Ændrede historiske vilkår kræver ny startdato; ældre estimater bliver utilgængelige.",
+        "data": {"area": "Prisområde", "contract": "Energiaftale", "rate": "Fast energipris eller spottillæg (DKK/kWh)", "vat_included": "Indtastet pris/tillæg inkluderer 25 % moms", "effective": "Aftalens startdato"}
       }
     },
-    "error": {"invalid_date": "Vælg en dato inden for de foregående fem år samt indeværende år og senest i dag."}
+    "error": {"invalid_date": "Vælg en gyldig dato (historik skal være inden for API-perioden og senest i dag).", "invalid_rate": "Indtast et endeligt decimaltal i DKK/kWh.", "choose_area": "Vælg DK1 eller DK2 til aftalesammenligning.", "new_effective_date": "Vælg en ny startdato, når historiske aftalevilkår ændres."}
+  },
+  "selector": {
+    "price_area": {"options": {"none": "Deaktiveret", "DK1": "DK1 · Vest for Storebælt", "DK2": "DK2 · Øst for Storebælt"}},
+    "contract": {"options": {"benchmark": "Kun markedspriser", "fixed": "Fast energipris", "spot_markup": "Spotpris plus tillæg"}}
+  },
+  "dashboard": {
+    "overview": "Overblik",
+    "consumption_day": "Seneste komplette dag", "consumption_month": "Rapporteret denne måned", "consumption_year": "Rapporteret i år",
+    "production_day": "Seneste dags produktion", "production_month": "Produktion denne måned", "production_year": "Produktion i år",
+    "market_price": "Spotpris nu", "cheapest_hour": "Billigste kommende time", "energy_cost": "Dit energiestimat", "market_cost": "Engrosestimat", "market_difference": "Merpris / rabat",
+    "status": "Kildestatus", "last_success": "Seneste hentning", "latest_measurement": "Seneste måling", "stale": "Dataaktualitet", "import_status": "Historikimport", "refresh": "Opdatér målinger",
+    "import_progress": "**Historik importeret til / ønsket slutdato**", "import_failures": "Målepunkter med importfejl",
+    "introduction": "Din strøm i overblik. Åbn et målepunkt for udvikling, markedspriser og estimater for ren energi. Målinger er forsinkede. Målepunkter lægges ikke sammen, da de kan overlappe. Dashboardet styres af integrationen. Kopiér kortene til dit eget dashboard for at tilpasse dem.",
+    "meter": "Målepunkt", "details": "Udforsk målepunkt", "energy": "Energi og udvikling",
+    "consumption": "Forbrug", "production": "Produktion", "daily": "Dagligt · 30 dage", "monthly": "Månedligt · 12 måneder",
+    "delayed": "Rapporteret energi, ikke liveeffekt. Seneste komplette dag kan være flere dage gammel. Måneds-/årstal omfatter kun rapporterede målinger.",
+    "awaiting_history": "Venter på historiske målinger. Se importstatus nedenfor.",
+    "coverage": "**Månedsdækning · rapporterede / forventede timer · dækket til**",
+    "market": "Det danske elmarked", "costs": "Din energipris mod markedet", "health": "Datastatus",
+    "stale_warning": "**Forsinkede eller utilgængelige data.** Kontrollér seneste måling og importstatus, før du fortolker summer.",
+    "price_basis": "Engrosspotpriser · DKK/kWh uden moms, nettariffer, afgifter og leverandørgebyrer. Kilde: [Energinet DayAheadPrices](https://www.energidataservice.dk/tso-electricity/DayAheadPrices). Valutaomregning kan afvige fra din leverandørs.",
+    "cheapest": "**Billigste komplette kommende time · gennemsnitspris**",
+    "unpublished": "Priserne er endnu ikke offentliggjort, eller dækningen er ufuldstændig. Manglende intervaller sættes ikke til nul.",
+    "configure_prices": "Åbn Indstillinger → Enheder og tjenester → El-Overblik HA → Konfigurer. Vælg 'Indstil markedspriser og elaftale pr. målepunkt', vælg DK1/DK2 og indtast eventuelt din energipris.",
+    "cost_basis": "**Estimat for ren energi, ikke din elregning.** Uden moms, elafgift, nettariffer og abonnement. Hver time anvender gennemsnittet af fire spotpriser med antaget jævnt forbrug. Positiv forskel = merpris mod engros; negativ = rabat. Ikke en garanteret besparelse.",
+    "configure_contract": "Tilføj en valgfri elaftale i integrationsindstillingerne for at sammenligne din energipris med engros.",
+    "incomplete_energy": "Venter på en komplet forbrugsdag.",
+    "outside_contract": "Seneste komplette forbrugsdag ligger før disse aftalevilkår. Der beregnes ikke bagudrettet.",
+    "unsupported_period": "Markedssammenligning før 1. oktober 2025 understøttes ikke.",
+    "incomplete_prices": "Venter på komplette matchende markedspriser. Automatisk sammenligningshistorik er begrænset til de seneste 31 dage.",
+    "ready": "Komplet matchende forbrug og priser. Begge beløb bruger samme energi og er uden moms.",
+    "comparison_period": "**Forbrugsperiode**", "effective": "Aftalen gælder fra",
+    "price_health": "**Markedspriser senest hentet · seneste offentliggjorte intervalslut · kildefejl (hvis nogen)**",
+    "today": "I dag", "tomorrow": "I morgen", "range": "Min. / gennemsnit / maks.", "time": "Lokal tid (UTC-forskydning)", "schedule": "Vis kvarterspriser"
   },
   "entity": {
     "sensor": {
+      "market_price": {"name": "Engrosspotpris"},
+      "cheapest_hour": {"name": "Billigste kommende time"},
+      "energy_cost": {"name": "Anslået energiomkostning med aftale"},
+      "market_cost": {"name": "Anslået energiomkostning til engrospris"},
+      "market_difference": {"name": "Merpris / rabat på energi"},
       "consumption_latest": {"name": "Senest rapporterede forbrug"},
       "consumption_day": {"name": "Forbrug på seneste komplette dag"},
       "consumption_month": {"name": "Rapporteret forbrug denne måned"},

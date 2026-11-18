@@ -11,6 +11,9 @@
   "dependencies": [
     "recorder"
   ],
+  "after_dependencies": [
+    "lovelace"
+  ],
   "documentation": "https://github.com/fclante/el-overblik-ha-app",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/fclante/el-overblik-ha-app/issues",
