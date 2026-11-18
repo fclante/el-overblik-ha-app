@@ -13,8 +13,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import cached_json_fragment, json_fragment
 
-from .const import CONF_DASHBOARD, DOMAIN, NAME
-from .coordinator import Coordinator
+from .const import CONF_DASHBOARD, CONF_METER_SETTINGS, DOMAIN, NAME
+from .coordinator import ACCESS_ERRORS, Coordinator, MeterData
 
 URL_PATH = "el-overblik-ha"
 DATA_KEY = f"{DOMAIN}_dashboard"
@@ -68,7 +68,81 @@ class Dashboard(LovelaceConfig):
         }
 
     def markdown(self, content: str) -> dict[str, Any]:
-        return {"type": "markdown", "content": content}
+        return {
+            "type": "markdown",
+            "content": content,
+            "grid_options": {"columns": "full", "rows": "auto"},
+        }
+
+    def reading_status(self, data: MeterData, direction: str) -> dict[str, Any]:
+        latest = data.latest_measurement(direction)
+        if latest is None:
+            return self.markdown(self.text("awaiting_history"))
+        return self.markdown(
+            self.text(f"{direction}_through")
+            + f" **{{{{ as_local(as_datetime('{latest.isoformat()}')).strftime('%d/%m/%Y %H:%M') }}}}**. "
+            + f"{{% if now() - as_datetime('{latest.isoformat()}') > timedelta(days=3) %}}"
+            + self.text("old_readings")
+            + "{% else %}"
+            + self.text("reported_not_live")
+            + "{% endif %}"
+        )
+
+    def source_status(
+        self, coordinator: Coordinator, meter: str
+    ) -> list[dict[str, Any]]:
+        data = coordinator.states[meter]
+        messages = []
+        if not coordinator.last_update_success:
+            messages.append(self.text("connection_failed"))
+        if data.error:
+            key = (
+                "energy_no_data"
+                if data.error == "no_data"
+                else "energy_access_failed"
+                if data.error in {f"api_{code}" for code in ACCESS_ERRORS}
+                else "energy_failed"
+            )
+            messages.append(self.text(key))
+        for source in data.metadata_errors:
+            label = self.text(
+                f"source_{source}"
+                if source in {"details", "charges"}
+                else "source_metadata"
+            )
+            key = (
+                "metadata_access_failed"
+                if data.metadata_errors[source] in ACCESS_ERRORS
+                else "metadata_failed"
+            )
+            messages.append(f"**{label}:** {self.text(key)}")
+        if coordinator.job_status["status"] == "error":
+            messages.append(self.text("import_failed"))
+        elif coordinator.job_status["status"] == "running":
+            messages.append(self.text("import_running"))
+        if data.notices:
+            messages.append(self.text("limited_readings"))
+        return [self.markdown("\n\n".join(messages))] if messages else []
+
+    def price_status(self, entity: str) -> dict[str, Any]:
+        return self.markdown(
+            f"{{% set error = state_attr('{entity}', 'market_error') %}}"
+            f"{{% set current = is_number(states('{entity}')) %}}"
+            "{% if error %}"
+            + self.text("market_failed")
+            + " {% if current %}"
+            + self.text("cached_price_valid")
+            + "{% else %}"
+            + self.text("current_price_missing")
+            + "{% endif %}"
+            + f"{{% elif not state_attr('{entity}', 'fetched_at') %}}"
+            + self.text("market_waiting")
+            + "{% elif not current %}"
+            + self.text("current_price_missing")
+            + "{% else %}"
+            + self.text("market_current")
+            + "{% endif %}"
+        )
 
     def build(self) -> dict[str, Any]:
         registry = er.async_get(self.hass)
@@ -79,7 +153,6 @@ class Dashboard(LovelaceConfig):
                 "column_span": 2,
                 "cards": [
                     self.heading(NAME, "mdi:lightning-bolt"),
-                    self.markdown(self.text("introduction")),
                 ],
             }
         ]
@@ -132,54 +205,90 @@ class Dashboard(LovelaceConfig):
                     return [{"type": "tile", "entity": entities[key], "name": name}]
 
                 path = f"meter-{meter[-4:]}-{coordinator.entry.entry_id[:6]}-{coordinator.meters.index(meter)}"
+                settings = coordinator.entry.options.get(CONF_METER_SETTINGS, {}).get(
+                    meter, {}
+                )
+                area_configured = settings.get("area") in {"DK1", "DK2"}
+                contract_configured = settings.get("contract", "benchmark") in {
+                    "fixed",
+                    "spot_markup",
+                }
+                direction = (
+                    "consumption"
+                    if "consumption" in data.history.streams
+                    or "production" not in data.history.streams
+                    else "production"
+                )
                 cards = [self.heading(name, "mdi:meter-electric")]
-                for key in (
-                    "consumption_day",
-                    "consumption_month",
-                    "market_price",
-                    "cheapest_hour",
-                    "energy_cost",
-                    "market_difference",
-                ):
-                    cards.extend(tile(key))
-                if "consumption" in data.history.streams:
+                kpis = tile(f"{direction}_day") + tile(f"{direction}_month")
+                if area_configured:
+                    for key in ("market_price", "cheapest_hour"):
+                        kpis.extend(tile(key))
+                    if contract_configured:
+                        for key in ("energy_cost", "market_difference"):
+                            kpis.extend(tile(key))
+                if kpis:
+                    cards.append(
+                        {
+                            "type": "grid",
+                            "columns": 2,
+                            "square": False,
+                            "cards": kpis,
+                            "grid_options": {"columns": "full", "rows": "auto"},
+                        }
+                    )
+                readings = self.reading_status(data, direction)
+                if f"{direction}_month" in entities:
+                    entity = entities[f"{direction}_month"]
+                    readings["content"] += (
+                        "\n\n"
+                        f"{{% set reported = state_attr('{entity}', 'reported_hours') %}}"
+                        f"{{% set expected = state_attr('{entity}', 'expected_hours') %}}"
+                        "{% if reported is not none and expected is not none %}"
+                        + self.text("month_coverage")
+                        + ": {{ reported }} / {{ expected }} h"
+                        "{% endif %}"
+                    )
+                if f"{direction}_day" in entities:
+                    entity = entities[f"{direction}_day"]
+                    readings["content"] += (
+                        f"{{% set day = state_attr('{entity}', 'period_start') %}}"
+                        "{% if day %} | "
+                        + self.text("complete_day_date")
+                        + ": {{ as_local(as_datetime(day)).strftime('%d/%m/%Y') }}"
+                        "{% endif %}"
+                    )
+                cards.append(readings)
+                cards.extend(self.source_status(coordinator, meter))
+                if direction in data.history.streams:
                     cards.append(
                         {
                             "type": "statistics-graph",
-                            "title": self.text("consumption"),
+                            "title": self.text(direction),
                             "chart_type": "bar",
                             "period": "day",
                             "days_to_show": 14,
                             "stat_types": ["change"],
+                            "grid_options": {"columns": "full", "rows": 5},
                             "entities": [
                                 {
-                                    "entity": f"{DOMAIN}:{meter}_consumption",
-                                    "name": self.text("consumption"),
+                                    "entity": f"{DOMAIN}:{meter}_{direction}",
+                                    "name": self.text(direction),
                                 }
                             ],
                         }
                     )
-                if "stale" in entities:
-                    cards.append(
-                        {
-                            "type": "conditional",
-                            "conditions": [
-                                {"entity": entities["stale"], "state": "on"}
-                            ],
-                            "card": self.markdown(self.text("stale_warning")),
-                        }
+                footer = []
+                if not area_configured:
+                    footer.append(self.text("prices_setup"))
+                elif "market_price" in entities:
+                    footer.append(
+                        self.price_status(entities["market_price"])["content"]
                     )
-                cards.append(
-                    {
-                        "type": "button",
-                        "name": self.text("details"),
-                        "icon": "mdi:chart-box-outline",
-                        "tap_action": {
-                            "action": "navigate",
-                            "navigation_path": f"/{URL_PATH}/{path}",
-                        },
-                    }
-                )
+                    if not contract_configured:
+                        footer.append(self.text("contract_setup"))
+                footer.append(f"[{self.text('details')}](/{URL_PATH}/{path})")
+                cards.append(self.markdown("\n\n".join(footer)))
                 overview.append({"type": "grid", "column_span": 2, "cards": cards})
                 energy_cards = [
                     self.heading(self.text("energy"), "mdi:chart-bar"),
@@ -199,6 +308,7 @@ class Dashboard(LovelaceConfig):
                                     "period": period,
                                     "days_to_show": days,
                                     "stat_types": ["change"],
+                                    "grid_options": {"columns": "full", "rows": 5},
                                     "entities": [
                                         {
                                             "entity": f"{DOMAIN}:{meter}_{direction}",
@@ -223,9 +333,12 @@ class Dashboard(LovelaceConfig):
                     )
                 price_cards = [
                     self.heading(self.text("market"), "mdi:chart-timeline-variant"),
-                    self.markdown(self.text("price_basis")),
                 ]
-                if "market_price" in entities:
+                if not area_configured:
+                    price_cards.append(self.markdown(self.text("configure_prices")))
+                elif "market_price" in entities:
+                    price_cards.append(self.markdown(self.text("price_basis")))
+                    price_cards.append(self.price_status(entities["market_price"]))
                     price_cards.extend(tile("market_price"))
                     price_cards.extend(tile("cheapest_hour"))
                     cheap = entities.get("cheapest_hour")
@@ -238,20 +351,29 @@ class Dashboard(LovelaceConfig):
                                 "{% if start and end %}"
                                 "{{ as_local(as_datetime(start)).strftime('%d/%m %H:%M %z') }} — "
                                 "{{ as_local(as_datetime(end)).strftime('%H:%M %z') }}"
-                                "{% else %}" + self.text("unpublished") + "{% endif %}"
+                                "{% else %}"
+                                + self.text("no_upcoming_hour")
+                                + "{% endif %}"
                             )
                         )
                     for day in ("today", "tomorrow"):
                         price_cards.append(self.schedule(entities["market_price"], day))
                 else:
-                    price_cards.append(self.markdown(self.text("configure_prices")))
+                    price_cards.append(
+                        self.markdown(self.text("price_entities_hidden"))
+                    )
                 cost_cards = [
                     self.heading(self.text("costs"), "mdi:cash-multiple"),
                     self.markdown(self.text("cost_basis")),
                 ]
-                for key in ("energy_cost", "market_cost", "market_difference"):
-                    cost_cards.extend(tile(key))
-                if "energy_cost" in entities:
+                if area_configured and contract_configured:
+                    for key in ("energy_cost", "market_cost", "market_difference"):
+                        cost_cards.extend(tile(key))
+                if (
+                    area_configured
+                    and contract_configured
+                    and "energy_cost" in entities
+                ):
                     entity = entities["energy_cost"]
                     cost_cards.append(
                         self.markdown(
@@ -285,13 +407,23 @@ class Dashboard(LovelaceConfig):
                         )
                     )
                 else:
-                    cost_cards.append(self.markdown(self.text("configure_prices")))
+                    cost_cards.append(
+                        self.markdown(
+                            self.text(
+                                "configure_prices"
+                                if not area_configured
+                                else "configure_contract"
+                                if not contract_configured
+                                else "price_entities_hidden"
+                            )
+                        )
+                    )
                 health_cards = [self.heading(self.text("health"), "mdi:heart-pulse")]
+                health_cards.extend(self.source_status(coordinator, meter))
                 for key in (
                     "status",
                     "last_success",
                     "latest_measurement",
-                    "stale",
                     "import_status",
                     "refresh",
                 ):
@@ -374,7 +506,18 @@ class Dashboard(LovelaceConfig):
             "| {{ '%.3f' | format(interval.price) }} |\n"
             "{% endfor %}{% endif %}\n"
             "{% if not day or not day.complete %}"
-            + self.text("unpublished")
+            "{% if day and day.intervals %}"
+            + self.text("incomplete_schedule")
+            + f"{{% elif state_attr('{entity}', 'market_error') %}}"
+            + self.text("schedule_unavailable")
+            + f"{{% elif not state_attr('{entity}', 'fetched_at') %}}"
+            + self.text("market_waiting")
+            + (
+                "{% else %}" + self.text("tomorrow_unpublished")
+                if day == "tomorrow"
+                else "{% else %}" + self.text("current_price_missing")
+            )
+            + "{% endif %}"
             + "{% endif %}"
             + "\n</details>"
         )
