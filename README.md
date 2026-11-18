@@ -69,8 +69,12 @@ History is imported in background chunks; setup does not wait for a complete bac
 
 After installation/reload, open **El-Overblik HA** in Home Assistant's sidebar. The integration-managed dashboard uses built-in cards, supports mobile layouts, and needs no custom cards or separate app. Charts use Home Assistant's built-in History integration, which is enabled in the default configuration.
 
-- **Overview:** latest complete-day consumption, reported monthly energy, prices and optional cost comparisons, with a two-week consumption chart per meter.
-- **Explore this meter:** daily/monthly consumption charts, separate production where reported, coverage, today/tomorrow's price schedule, cheapest upcoming complete hour, and connection/import health.
+- **Overview:** compact energy KPIs, the date readings cover, reported month coverage, and a full-width two-week chart per meter. Prices and contract estimates appear when configured; **Details** opens the meter view.
+- **Details:** daily/monthly consumption charts, separate production where reported, coverage, today/tomorrow's price schedule, cheapest upcoming complete hour, and connection/import health.
+
+Normal reporting delay is informational, not a missing-data warning. Readings older than three days receive an age warning; this threshold is not an upstream delivery guarantee. Connection, reading-access, meter-details, charges, and import failures are named separately. A failed ElOverblik charges request does **not** establish that consumption or public prices are missing. Open **Details > Data health** for source errors and import progress; cached readings remain visible.
+
+Market prices have independent status: initial fetch, unavailable current interval, failed refresh with still-valid cached prices, and tomorrow's not-yet-published prices are distinct. Before selecting DK1/DK2, the overview shows a compact setup prompt instead of empty price tiles. Contract estimate tiles stay hidden until a contract is entered. Disabled entities are respected and are not mistaken for an unconfigured region; manage them under **Settings > Devices & services**.
 - **Delayed data stays explicit:** successful fetching and latest measurement are shown separately. Partial totals are not presented as complete, and overlapping meters are not added together.
 
 Under **Settings > Devices & services > El-Overblik HA > Configure**, select **Configure market prices and contracts per meter**:
